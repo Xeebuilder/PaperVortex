@@ -16,6 +16,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  
   <style>
     :root {
       --bg: #000000;
@@ -76,7 +80,7 @@
     .nav-container {
       max-width: 1200px;
       margin: 0 auto;
-      height: 64px;
+      height: 68px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -86,7 +90,7 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
       color: #fff;
       font-weight: 700;
@@ -94,18 +98,16 @@
       letter-spacing: -0.02em;
     }
 
-    .brand-logo {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #2997ff, #0051d4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-      font-size: 15px;
-      color: #fff;
-      box-shadow: 0 0 16px rgba(41, 151, 255, 0.5);
+    .brand-logo-img {
+      height: 38px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.25));
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .brand:hover .brand-logo-img {
+      transform: scale(1.08);
     }
 
     .nav-links {
@@ -908,7 +910,7 @@
   <nav>
     <div class="nav-container">
       <a href="#" class="brand">
-        <div class="brand-logo">V</div>
+        <img src="logo.png" alt="Paper Vortex Studios" class="brand-logo-img">
         <span>Paper Vortex Studios</span>
       </a>
       <ul class="nav-links">
@@ -956,6 +958,9 @@
           
           <div class="promo-stage" id="promoStage">
             <div class="promo-progress" id="promoProgress"></div>
+            <div id="promoLogoWrap" style="display: none; margin-bottom: 24px; transition: all 0.4s ease; text-align: center;">
+              <img src="logo.png" alt="Paper Vortex Studios" style="max-height: 110px; width: auto; filter: drop-shadow(0 0 35px rgba(255,255,255,0.45)); animation: pulseLogo 2s infinite ease-in-out;">
+            </div>
             <div class="promo-text" id="promoText">INMOBILIARIAS EN MIAMI...</div>
 
             <!-- Controls overlay -->
@@ -1263,7 +1268,7 @@
     <div class="container">
       <div class="footer-grid">
         <div class="brand">
-          <div class="brand-logo">V</div>
+          <img src="logo.png" alt="Paper Vortex Studios" class="brand-logo-img">
           <span>Paper Vortex Studios</span>
         </div>
         <div style="font-size: 13px; color: var(--text-secondary);">
@@ -1383,29 +1388,186 @@
     let currentIndex = 0;
     let timer = null;
     let audioCtx = null;
+    let musicInterval = null;
+    let currentStep = 0;
+    let masterGain = null;
+    let noiseBuffer = null;
 
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Master Compressor & Limiter for punchy, clean sound
+        const compressor = audioCtx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-18, audioCtx.currentTime);
+        compressor.knee.setValueAtTime(30, audioCtx.currentTime);
+        compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+        compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+        compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+        masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+
+        masterGain.connect(compressor);
+        compressor.connect(audioCtx.destination);
+
+        // Pre-create noise buffer for crisp hi-hats & claps
+        const bufferSize = audioCtx.sampleRate * 1;
+        noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
       }
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
     }
 
-    function playKick() {
+    // Instrument Synthesizers
+    function triggerKick(time) {
       if (!audioEnabled || !audioCtx) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(32, audioCtx.currentTime + 0.14);
-      gain.gain.setValueAtTime(0.55, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.14);
+      osc.frequency.setValueAtTime(155, time);
+      osc.frequency.exponentialRampToValueAtTime(36, time + 0.16);
+      gain.gain.setValueAtTime(0.9, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.15);
+      gain.connect(masterGain);
+      osc.start(time);
+      osc.stop(time + 0.24);
+    }
+
+    function triggerHiHat(time, isOpen = false) {
+      if (!audioEnabled || !audioCtx || !noiseBuffer) return;
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = noiseBuffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(7500, time);
+
+      const gain = audioCtx.createGain();
+      const dur = isOpen ? 0.18 : 0.045;
+      gain.gain.setValueAtTime(isOpen ? 0.35 : 0.18, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+
+      noise.start(time);
+      noise.stop(time + dur + 0.01);
+    }
+
+    function triggerSnare(time) {
+      if (!audioEnabled || !audioCtx || !noiseBuffer) return;
+      // Tone part
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(190, time);
+      osc.frequency.exponentialRampToValueAtTime(80, time + 0.1);
+      oscGain.gain.setValueAtTime(0.4, time);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+      osc.connect(oscGain);
+      oscGain.connect(masterGain);
+      osc.start(time);
+      osc.stop(time + 0.13);
+
+      // Noise snappy part
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = noiseBuffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1400, time);
+      filter.Q.setValueAtTime(1.5, time);
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.45, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      noise.start(time);
+      noise.stop(time + 0.19);
+    }
+
+    function triggerBass(time, freq) {
+      if (!audioEnabled || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const filter = audioCtx.createBiquadFilter();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(450, time);
+      filter.frequency.exponentialRampToValueAtTime(110, time + 0.14);
+      filter.Q.setValueAtTime(5, time);
+
+      gain.gain.setValueAtTime(0.4, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start(time);
+      osc.stop(time + 0.16);
+    }
+
+    // 16-Step Procedural Sequencer (~124 BPM)
+    const bassNotes = [
+      43.65, 0, 43.65, 0,  // F1
+      51.91, 0, 43.65, 58.27, // G#1, F1, Bb1
+      43.65, 0, 43.65, 0,
+      65.41, 0, 58.27, 51.91  // C2, Bb1, G#1
+    ];
+
+    function startMusicEngine() {
+      if (musicInterval) clearInterval(musicInterval);
+      const stepDurationMs = 120; // 125 BPM 16th-notes
+      currentStep = 0;
+
+      musicInterval = setInterval(() => {
+        if (!isPlaying || !audioEnabled || !audioCtx) return;
+        const now = audioCtx.currentTime;
+
+        // Kick on 0, 4, 8, 12
+        if (currentStep % 4 === 0) {
+          triggerKick(now);
+        }
+
+        // Snare / Clap on 4, 12
+        if (currentStep === 4 || currentStep === 12) {
+          triggerSnare(now);
+        }
+
+        // Hi-Hat on offbeats (2, 6, 10, 14) and 16ths
+        if (currentStep % 2 === 0) {
+          triggerHiHat(now, currentStep === 14);
+        } else {
+          triggerHiHat(now, false);
+        }
+
+        // Bass groove
+        const note = bassNotes[currentStep];
+        if (note > 0) {
+          triggerBass(now, note);
+        }
+
+        currentStep = (currentStep + 1) % 16;
+      }, stepDurationMs);
+    }
+
+    function stopMusicEngine() {
+      if (musicInterval) {
+        clearInterval(musicInterval);
+        musicInterval = null;
+      }
     }
 
     function nextFrame() {
@@ -1417,13 +1579,23 @@
       const item = script[currentIndex];
       const textBox = document.getElementById('promoText');
       const prog = document.getElementById('promoProgress');
+      const logoWrap = document.getElementById('promoLogoWrap');
 
       textBox.classList.remove('active');
 
       setTimeout(() => {
+        // Show logo when on the last frame (Paper Vortex Studios)
+        const isFinalSlide = (currentIndex === script.length - 1);
+        if (isFinalSlide && logoWrap) {
+          logoWrap.style.display = 'block';
+          textBox.style.fontSize = 'clamp(20px, 3.8vw, 42px)';
+        } else if (logoWrap) {
+          logoWrap.style.display = 'none';
+          textBox.style.fontSize = '';
+        }
+
         textBox.innerHTML = item.text;
         textBox.classList.add('active');
-        playKick();
 
         const pct = ((currentIndex + 1) / script.length) * 100;
         prog.style.width = pct + '%';
@@ -1442,9 +1614,11 @@
 
       if (isPlaying) {
         btn.innerText = "⏸ Pausar";
+        startMusicEngine();
         nextFrame();
       } else {
         btn.innerText = "▶ Reanudar";
+        stopMusicEngine();
         clearTimeout(timer);
       }
     }
@@ -1452,7 +1626,12 @@
     function toggleAudio() {
       audioEnabled = !audioEnabled;
       document.getElementById('soundBtn').innerText = audioEnabled ? "🔊 Audio: ON" : "🔇 Audio: OFF";
-      if (audioEnabled) initAudio();
+      if (audioEnabled) {
+        initAudio();
+        if (isPlaying) startMusicEngine();
+      } else {
+        stopMusicEngine();
+      }
     }
 
     function toggleLanguage() {
