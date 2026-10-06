@@ -328,6 +328,59 @@
     .highlight-gold { color: #f5a623; text-shadow: 0 0 30px rgba(245, 166, 35, 0.4); }
     .highlight-blue { color: #2997ff; }
     .highlight-green { color: #30d158; }
+    .highlight-comedy {
+      color: #ffd60a;
+      font-style: italic;
+      font-size: 0.85em;
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+
+    .flash-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #fff; opacity: 0; pointer-events: none; z-index: 50;
+      transition: opacity 0.08s ease-out;
+    }
+    .flash-overlay.active { opacity: 0.95; transition: none; }
+
+    .shake {
+      animation: screenShake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes screenShake {
+      10%, 90% { transform: translate3d(-3px, 1px, 0); }
+      20%, 80% { transform: translate3d(5px, -2px, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 3px, 0); }
+      40%, 60% { transform: translate3d(6px, -3px, 0); }
+    }
+
+    .mega-expand {
+      animation: violentZoom 0.9s cubic-bezier(0.8, 0, 0.2, 1) forwards !important;
+    }
+    @keyframes violentZoom {
+      0% { opacity: 1; transform: scale(1); filter: blur(0px); }
+      40% { opacity: 1; transform: scale(2.8); filter: blur(2px); color: #ff3b30; }
+      100% { opacity: 0; transform: scale(22); filter: blur(20px); color: #fff; }
+    }
+
+    .wa-bubble-wrap {
+      display: none;
+      margin-top: 18px;
+      background: #005c4b;
+      color: #e9edef;
+      padding: 12px 24px;
+      border-radius: 18px;
+      font-size: clamp(15px, 2.2vw, 24px);
+      font-weight: 600;
+      max-width: 650px;
+      box-shadow: 0 15px 40px rgba(0, 92, 75, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      animation: popBubble 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popBubble {
+      0% { transform: scale(0.6) translateY(20px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
 
     .promo-progress {
       position: absolute;
@@ -956,20 +1009,25 @@
       <!-- Hero Video Player / Cinema Bezel Showcase -->
       <div class="hero-showcase" id="solucion">
         <div class="showcase-screen">
+          <div class="flash-overlay" id="flashOverlay"></div>
           <div class="video-switch-note">Cinematic Ad Player • Paper Vortex Studios</div>
           
           <div class="promo-stage" id="promoStage">
             <div class="promo-progress" id="promoProgress"></div>
             <div id="promoLogoWrap" style="display: none; margin-bottom: 24px; transition: all 0.4s ease; text-align: center;">
-              <img src="logo.png" alt="Paper Vortex Studios" style="max-height: 110px; width: auto; filter: drop-shadow(0 0 35px rgba(255,255,255,0.45)); animation: pulseLogo 2s infinite ease-in-out;">
+              <img src="logo.png" alt="Paper Vortex Studios" style="max-height: 110px; width: auto; filter: drop-shadow(0 0 35px rgba(255,255,255,0.45));">
             </div>
-            <div class="promo-text" id="promoText">INMOBILIARIAS EN MIAMI...</div>
+            <div class="promo-text" id="promoText">11:42 PM.</div>
+            <div class="wa-bubble-wrap" id="waBubble">
+              "Hola, ¿cuánto pide de renta y cuántos cuartos tiene?"
+            </div>
 
             <!-- Controls overlay -->
             <div class="promo-controls">
               <button class="btn-ctrl" id="playBtn" onclick="togglePlay()">▶ Iniciar Video</button>
               <button class="btn-ctrl btn-ctrl-ghost" id="soundBtn" onclick="toggleAudio()">🔊 Audio: ON</button>
               <button class="btn-ctrl btn-ctrl-ghost" id="langBtn" onclick="toggleLanguage()">🌐 ES / EN</button>
+              <a href="apple_promo_video.html" target="_blank" class="btn-ctrl btn-ctrl-ghost" style="text-decoration:none;">⛶ Pantalla Completa</a>
             </div>
           </div>
         </div>
@@ -1354,259 +1412,360 @@
     }
 
     // ==========================================
-    // HERO KINETIC TYPOGRAPHY ENGINE (Apple Style)
+    // CINEMATIC STORYBOARD & TIMING
     // ==========================================
-    const scriptES = [
-      { text: "INMOBILIARIAS EN MIAMI...", dur: 950 },
-      { text: "EL <span class='highlight-red'>78%</span> DE LOS COMPRADORES", dur: 1050 },
-      { text: "LE COMPRA AL <span class='highlight-gold'>PRIMERO</span> QUE CONTESTA.", dur: 1100 },
-      { text: "¿TU EQUIPO RESPONDE <span class='highlight-blue'>A LAS 11 PM</span>?", dur: 1100 },
-      { text: "NOSOTROS SÍ.", dur: 900 },
-      { text: "ASISTENTE DE IA EN WHATSAPP 24/7.", dur: 1150 },
-      { text: "SABE SI ES <span class='highlight-gold'>VENTA O ALQUILER</span>.", dur: 1100 },
-      { text: "CUARTOS. METRAJE. PRECIOS.", dur: 1050 },
-      { text: "FILTRA EL PRESUPUESTO.", dur: 950 },
-      { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA GRATIS</span>.", dur: 1200 },
-      { text: "PAPER VORTEX STUDIOS.", dur: 1400 }
+    const storyES = [
+      { text: "11:42 PM.", dur: 900, type: "intro" },
+      { text: "UN COMPRADOR CALIFICADO...", dur: 1000, type: "beat" },
+      { text: "VE TU PROPIEDAD EN BRICKELL.", dur: 1100, type: "beat" },
+      { text: "TE ESCRIBE POR WHATSAPP:", dur: 950, type: "bubble", bubbleText: "«¿Cuánto pide de renta? ¿Cuántos cuartos?»" },
+      { text: "Y TÚ...", dur: 900, type: "beat" },
+      { text: "ESTÁS <span class='highlight-blue'>DURMIENDO.</span>", dur: 1100, type: "beat" },
+      { text: "O EN UNA CITA.", dur: 950, type: "comedic_prep" },
+
+      // Comic Relief & Record Scratch
+      { text: "<span class='highlight-comedy'>👀 (Bueno... esperemos que sea buena cita 🥂)</span>", dur: 1800, type: "comedy_pause" },
+      { text: "PERO EL COMPRADOR...", dur: 950, type: "tension_slow" },
+      { text: "<span class='highlight-red'>NO ESPERA.</span>", dur: 950, type: "tension_slow" },
+      { text: "LE ESCRIBIÓ AL OTRO REALTOR.", dur: 1050, type: "tension_slow" },
+      { text: "Y PERDISTE <span class='highlight-red'>$15,000</span> EN COMISIÓN.", dur: 1200, type: "shake" },
+
+      // Violent Mega Expand
+      { text: "<span class='highlight-red'>CAMBIA ESO.</span>", dur: 1150, type: "mega_expand" },
+
+      // Explosive Drop & Solution
+      { text: "ASISTENTE DE IA EN WHATSAPP.", dur: 1100, type: "drop_beat" },
+      { text: "CONECTADO A TU WEB <span class='highlight-gold'>EN 24 HORAS</span>.", dur: 1150, type: "beat_high" },
+      { text: "SABE SI ES <span class='highlight-gold'>VENTA O ALQUILER</span>.", dur: 1100, type: "beat_high" },
+      { text: "CUARTOS. METRAJE. PRECIOS. HOA.", dur: 1150, type: "beat_high" },
+      { text: "FILTRA EL PRESUPUESTO REAL.", dur: 1050, type: "beat_high" },
+      { text: "TE ENTREGA LA CITA <span class='highlight-green'>AGENDADA</span>.", dur: 1200, type: "beat_high" },
+      { text: "MIENTRAS DUERMES...", dur: 950, type: "beat" },
+      { text: "<span class='highlight-comedy'>😉 (O sigues en tu cita)</span>", dur: 1100, type: "comedy_wink" },
+
+      // Outro
+      { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1400, type: "beat_final" },
+      { text: "PAPER VORTEX STUDIOS.", dur: 2200, type: "outro_logo" }
     ];
 
-    const scriptEN = [
-      { text: "MIAMI REAL ESTATE...", dur: 950 },
-      { text: "<span class='highlight-red'>78%</span> OF LUXURY BUYERS", dur: 1050 },
-      { text: "BUY FROM WHOEVER REPLIES <span class='highlight-gold'>FIRST</span>.", dur: 1100 },
-      { text: "DOES YOUR TEAM REPLY AT <span class='highlight-blue'>11 PM</span>?", dur: 1100 },
-      { text: "WE DO.", dur: 900 },
-      { text: "24/7 AI AGENT ON WHATSAPP.", dur: 1150 },
-      { text: "SALES & RENTALS. BEDROOMS.", dur: 1100 },
-      { text: "SQUARE FOOTAGE. PRICES. HOA.", dur: 1050 },
-      { text: "QUALIFIES BUYER BUDGETS.", dur: 950 },
-      { text: "TEST IT <span class='highlight-green'>1 WEEK FREE</span>.", dur: 1200 },
-      { text: "PAPER VORTEX STUDIOS.", dur: 1400 }
+    const storyEN = [
+      { text: "11:42 PM.", dur: 900, type: "intro" },
+      { text: "A QUALIFIED LUXURY BUYER...", dur: 1000, type: "beat" },
+      { text: "SEES YOUR BRICKELL LISTING.", dur: 1100, type: "beat" },
+      { text: "MESSAGES YOUR WHATSAPP:", dur: 950, type: "bubble", bubbleText: "“How much is rent? How many bedrooms?”" },
+      { text: "AND YOU...", dur: 900, type: "beat" },
+      { text: "ARE SOUND <span class='highlight-blue'>ASLEEP.</span>", dur: 1100, type: "beat" },
+      { text: "OR ON A DATE.", dur: 950, type: "comedic_prep" },
+
+      // Comic Relief
+      { text: "<span class='highlight-comedy'>👀 (Hey... hope it's a good date 🥂)</span>", dur: 1800, type: "comedy_pause" },
+      { text: "BUT THE BUYER...", dur: 950, type: "tension_slow" },
+      { text: "<span class='highlight-red'>DOESN'T WAIT.</span>", dur: 950, type: "tension_slow" },
+      { text: "THEY MESSAGED ANOTHER AGENT.", dur: 1050, type: "tension_slow" },
+      { text: "AND YOU LOST A <span class='highlight-red'>$15,000</span> COMMISSION.", dur: 1200, type: "shake" },
+
+      // Violent Mega Expand
+      { text: "<span class='highlight-red'>CHANGE THAT.</span>", dur: 1150, type: "mega_expand" },
+
+      // Explosive Drop
+      { text: "24/7 AI AGENT ON WHATSAPP.", dur: 1100, type: "drop_beat" },
+      { text: "CONNECTED TO YOUR WEBSITE <span class='highlight-gold'>IN 24H</span>.", dur: 1150, type: "beat_high" },
+      { text: "KNOWS <span class='highlight-gold'>SALE OR RENT</span>.", dur: 1100, type: "beat_high" },
+      { text: "BEDROOMS. SQUARE FOOTAGE. HOA.", dur: 1150, type: "beat_high" },
+      { text: "QUALIFIES REAL BUYER FUNDS.", dur: 1050, type: "beat_high" },
+      { text: "HANDS YOU THE <span class='highlight-green'>BOOKED TOUR</span>.", dur: 1200, type: "beat_high" },
+      { text: "WHILE YOU SLEEP...", dur: 950, type: "beat" },
+      { text: "<span class='highlight-comedy'>😉 (Or stay on your date)</span>", dur: 1100, type: "comedy_wink" },
+
+      // Outro
+      { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1400, type: "beat_final" },
+      { text: "PAPER VORTEX STUDIOS.", dur: 2200, type: "outro_logo" }
     ];
 
-    let currentLang = 'ES';
+    let currentStory = storyES;
+    let step = 0;
     let isPlaying = false;
     let audioEnabled = true;
-    let currentIndex = 0;
     let timer = null;
     let audioCtx = null;
-    let musicInterval = null;
-    let currentStep = 0;
     let masterGain = null;
     let noiseBuffer = null;
 
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Master Compressor & Limiter for punchy, clean sound
-        const compressor = audioCtx.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-18, audioCtx.currentTime);
-        compressor.knee.setValueAtTime(30, audioCtx.currentTime);
-        compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
-        compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
-        compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+        const comp = audioCtx.createDynamicsCompressor();
+        comp.threshold.setValueAtTime(-14, audioCtx.currentTime);
+        comp.knee.setValueAtTime(20, audioCtx.currentTime);
+        comp.ratio.setValueAtTime(10, audioCtx.currentTime);
+        comp.attack.setValueAtTime(0.002, audioCtx.currentTime);
+        comp.release.setValueAtTime(0.2, audioCtx.currentTime);
 
         masterGain = audioCtx.createGain();
-        masterGain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+        masterGain.gain.setValueAtTime(0.75, audioCtx.currentTime);
 
-        masterGain.connect(compressor);
-        compressor.connect(audioCtx.destination);
+        masterGain.connect(comp);
+        comp.connect(audioCtx.destination);
 
-        // Pre-create noise buffer for crisp hi-hats & claps
-        const bufferSize = audioCtx.sampleRate * 1;
-        noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = Math.random() * 2 - 1;
-        }
+        const len = audioCtx.sampleRate * 1;
+        noiseBuffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
       }
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
     }
 
-    // Instrument Synthesizers
-    function triggerKick(time) {
+    function play808(intensity = 1.0) {
       if (!audioEnabled || !audioCtx) return;
+      const t = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
+
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(155, time);
-      osc.frequency.exponentialRampToValueAtTime(36, time + 0.16);
-      gain.gain.setValueAtTime(0.9, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22);
+      osc.frequency.setValueAtTime(160, t);
+      osc.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(32, t + 0.45);
+
+      gain.gain.setValueAtTime(0.9 * intensity, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
+
       osc.connect(gain);
       gain.connect(masterGain);
-      osc.start(time);
-      osc.stop(time + 0.24);
+      osc.start(t);
+      osc.stop(t + 0.5);
     }
 
-    function triggerHiHat(time, isOpen = false) {
+    function playClap() {
       if (!audioEnabled || !audioCtx || !noiseBuffer) return;
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = noiseBuffer;
-
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(7500, time);
-
-      const gain = audioCtx.createGain();
-      const dur = isOpen ? 0.18 : 0.045;
-      gain.gain.setValueAtTime(isOpen ? 0.35 : 0.18, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-
-      noise.start(time);
-      noise.stop(time + dur + 0.01);
-    }
-
-    function triggerSnare(time) {
-      if (!audioEnabled || !audioCtx || !noiseBuffer) return;
-      // Tone part
-      const osc = audioCtx.createOscillator();
-      const oscGain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(190, time);
-      osc.frequency.exponentialRampToValueAtTime(80, time + 0.1);
-      oscGain.gain.setValueAtTime(0.4, time);
-      oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
-      osc.connect(oscGain);
-      oscGain.connect(masterGain);
-      osc.start(time);
-      osc.stop(time + 0.13);
-
-      // Noise snappy part
+      const t = audioCtx.currentTime;
       const noise = audioCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1400, time);
-      filter.Q.setValueAtTime(1.5, time);
+      filter.frequency.setValueAtTime(1600, t);
+      filter.Q.setValueAtTime(2, t);
+
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.45, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(masterGain);
-      noise.start(time);
-      noise.stop(time + 0.19);
+      noise.start(t);
+      noise.stop(t + 0.19);
     }
 
-    function triggerBass(time, freq) {
+    function playSynthChord(chordFreqs, duration = 0.6) {
       if (!audioEnabled || !audioCtx) return;
-      const osc = audioCtx.createOscillator();
+      const t = audioCtx.currentTime;
+      chordFreqs.forEach(freq => {
+        const osc = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, t);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1800, t);
+        filter.frequency.exponentialRampToValueAtTime(350, t + duration);
+        filter.Q.setValueAtTime(3, t);
+
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(t);
+        osc.stop(t + duration + 0.05);
+      });
+    }
+
+    function playRecordScratch() {
+      if (!audioEnabled || !audioCtx || !noiseBuffer) return;
+      const t = audioCtx.currentTime;
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = noiseBuffer;
       const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(3200, t);
+      filter.frequency.exponentialRampToValueAtTime(200, t + 0.28);
+
       const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.6, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
 
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, time);
-
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(450, time);
-      filter.frequency.exponentialRampToValueAtTime(110, time + 0.14);
-      filter.Q.setValueAtTime(5, time);
-
-      gain.gain.setValueAtTime(0.4, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
-
-      osc.connect(filter);
+      noise.connect(filter);
       filter.connect(gain);
       gain.connect(masterGain);
+      noise.start(t);
+      noise.stop(t + 0.31);
 
-      osc.start(time);
-      osc.stop(time + 0.16);
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, t);
+      osc.frequency.exponentialRampToValueAtTime(60, t + 0.28);
+      oscGain.gain.setValueAtTime(0.4, t);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.29);
+      osc.connect(oscGain);
+      oscGain.connect(masterGain);
+      osc.start(t);
+      osc.stop(t + 0.3);
     }
 
-    // 16-Step Procedural Sequencer (~124 BPM)
-    const bassNotes = [
-      43.65, 0, 43.65, 0,  // F1
-      51.91, 0, 43.65, 58.27, // G#1, F1, Bb1
-      43.65, 0, 43.65, 0,
-      65.41, 0, 58.27, 51.91  // C2, Bb1, G#1
-    ];
+    function playComedyChime() {
+      if (!audioEnabled || !audioCtx) return;
+      const t = audioCtx.currentTime;
+      const notes = [1046.5, 1318.5, 1567.98];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + idx * 0.08);
 
-    function startMusicEngine() {
-      if (musicInterval) clearInterval(musicInterval);
-      const stepDurationMs = 120; // 125 BPM 16th-notes
-      currentStep = 0;
+        gain.gain.setValueAtTime(0.28, t + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + 0.65);
 
-      musicInterval = setInterval(() => {
-        if (!isPlaying || !audioEnabled || !audioCtx) return;
-        const now = audioCtx.currentTime;
-
-        // Kick on 0, 4, 8, 12
-        if (currentStep % 4 === 0) {
-          triggerKick(now);
-        }
-
-        // Snare / Clap on 4, 12
-        if (currentStep === 4 || currentStep === 12) {
-          triggerSnare(now);
-        }
-
-        // Hi-Hat on offbeats (2, 6, 10, 14) and 16ths
-        if (currentStep % 2 === 0) {
-          triggerHiHat(now, currentStep === 14);
-        } else {
-          triggerHiHat(now, false);
-        }
-
-        // Bass groove
-        const note = bassNotes[currentStep];
-        if (note > 0) {
-          triggerBass(now, note);
-        }
-
-        currentStep = (currentStep + 1) % 16;
-      }, stepDurationMs);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(t + idx * 0.08);
+        osc.stop(t + idx * 0.08 + 0.7);
+      });
     }
 
-    function stopMusicEngine() {
-      if (musicInterval) {
-        clearInterval(musicInterval);
-        musicInterval = null;
-      }
+    function playMegaImpact() {
+      if (!audioEnabled || !audioCtx || !noiseBuffer) return;
+      const t = audioCtx.currentTime;
+      play808(1.5);
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = noiseBuffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(8000, t);
+      filter.frequency.exponentialRampToValueAtTime(150, t + 0.7);
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.7, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      noise.start(t);
+      noise.stop(t + 0.85);
     }
+
+    function playOutroPad() {
+      if (!audioEnabled || !audioCtx) return;
+      playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], 1.8);
+    }
+
+    const chordFm = [174.61, 207.65, 261.63];
+    const chordDb = [138.59, 174.61, 207.65];
+    const chordBbm = [116.54, 138.59, 174.61];
 
     function nextFrame() {
-      const script = currentLang === 'ES' ? scriptES : scriptEN;
-      if (currentIndex >= script.length) {
-        currentIndex = 0;
+      if (step >= currentStory.length) {
+        step = 0;
       }
 
-      const item = script[currentIndex];
+      const frame = currentStory[step];
+      const stage = document.getElementById('promoStage');
       const textBox = document.getElementById('promoText');
-      const prog = document.getElementById('promoProgress');
+      const waBubble = document.getElementById('waBubble');
       const logoWrap = document.getElementById('promoLogoWrap');
+      const flashOverlay = document.getElementById('flashOverlay');
+      const progressBar = document.getElementById('promoProgress');
 
-      textBox.classList.remove('active');
+      textBox.classList.remove('active', 'mega-expand');
+      stage.classList.remove('shake');
+      waBubble.style.display = 'none';
+      logoWrap.style.display = 'none';
 
       setTimeout(() => {
-        // Show logo when on the last frame (Paper Vortex Studios)
-        const isFinalSlide = (currentIndex === script.length - 1);
-        if (isFinalSlide && logoWrap) {
-          logoWrap.style.display = 'block';
-          textBox.style.fontSize = 'clamp(20px, 3.8vw, 42px)';
-        } else if (logoWrap) {
-          logoWrap.style.display = 'none';
-          textBox.style.fontSize = '';
-        }
-
-        textBox.innerHTML = item.text;
+        textBox.innerHTML = frame.text;
         textBox.classList.add('active');
 
-        const pct = ((currentIndex + 1) / script.length) * 100;
-        prog.style.width = pct + '%';
+        const pct = ((step + 1) / currentStory.length) * 100;
+        progressBar.style.width = pct + '%';
 
-        currentIndex++;
-        if (isPlaying) {
-          timer = setTimeout(nextFrame, item.dur);
+        switch (frame.type) {
+          case 'intro':
+            playSynthChord(chordFm, 0.8);
+            break;
+          case 'beat':
+            play808(0.9);
+            playSynthChord(chordFm, 0.4);
+            break;
+          case 'bubble':
+            play808(0.8);
+            waBubble.innerText = frame.bubbleText;
+            waBubble.style.display = 'inline-block';
+            break;
+          case 'comedic_prep':
+            playSynthChord(chordDb, 0.5);
+            break;
+          case 'comedy_pause':
+            playRecordScratch();
+            setTimeout(playComedyChime, 240);
+            break;
+          case 'tension_slow':
+            playSynthChord(chordBbm, 0.7);
+            break;
+          case 'shake':
+            stage.classList.add('shake');
+            play808(1.2);
+            playClap();
+            break;
+          case 'mega_expand':
+            textBox.classList.add('mega-expand');
+            flashOverlay.classList.add('active');
+            stage.classList.add('shake');
+            playMegaImpact();
+            setTimeout(() => {
+              flashOverlay.classList.remove('active');
+            }, 80);
+            break;
+          case 'drop_beat':
+            play808(1.4);
+            playClap();
+            playSynthChord(chordFm, 0.9);
+            break;
+          case 'beat_high':
+            play808(1.1);
+            playClap();
+            playSynthChord(step % 2 === 0 ? chordDb : chordBbm, 0.5);
+            break;
+          case 'comedy_wink':
+            playComedyChime();
+            break;
+          case 'beat_final':
+            play808(1.3);
+            playClap();
+            playSynthChord(chordDb, 1.0);
+            break;
+          case 'outro_logo':
+            logoWrap.style.display = 'block';
+            textBox.style.fontSize = 'clamp(20px, 3.8vw, 42px)';
+            play808(1.2);
+            playOutroPad();
+            break;
         }
-      }, 70);
+
+        step++;
+        if (isPlaying) {
+          timer = setTimeout(nextFrame, frame.dur);
+        }
+      }, 60);
     }
 
     function togglePlay() {
@@ -1616,11 +1775,9 @@
 
       if (isPlaying) {
         btn.innerText = "⏸ Pausar";
-        startMusicEngine();
         nextFrame();
       } else {
         btn.innerText = "▶ Reanudar";
-        stopMusicEngine();
         clearTimeout(timer);
       }
     }
@@ -1628,27 +1785,26 @@
     function toggleAudio() {
       audioEnabled = !audioEnabled;
       document.getElementById('soundBtn').innerText = audioEnabled ? "🔊 Audio: ON" : "🔇 Audio: OFF";
-      if (audioEnabled) {
-        initAudio();
-        if (isPlaying) startMusicEngine();
-      } else {
-        stopMusicEngine();
-      }
+      if (audioEnabled) initAudio();
     }
 
     function toggleLanguage() {
-      currentLang = currentLang === 'ES' ? 'EN' : 'ES';
-      document.getElementById('langBtn').innerText = `🌐 ${currentLang}`;
-      if (!isPlaying) {
-        currentIndex = 0;
-        const script = currentLang === 'ES' ? scriptES : scriptEN;
-        document.getElementById('promoText').innerHTML = script[0].text;
+      currentStory = (currentStory === storyES) ? storyEN : storyES;
+      document.getElementById('langBtn').innerText = (currentStory === storyES) ? "🌐 ES" : "🌐 EN";
+      clearTimeout(timer);
+      step = 0;
+      document.getElementById('promoProgress').style.width = '0%';
+      document.getElementById('promoLogoWrap').style.display = 'none';
+      document.getElementById('waBubble').style.display = 'none';
+      document.getElementById('promoText').innerHTML = (currentStory === storyES) ? "11:42 PM." : "11:42 PM.";
+      if (isPlaying) {
+        nextFrame();
       }
     }
 
     // Auto trigger presentation on user interaction
     window.addEventListener('click', () => {
-      if (!isPlaying && currentIndex === 0) {
+      if (!isPlaying && step === 0) {
         togglePlay();
       }
     }, { once: true });
