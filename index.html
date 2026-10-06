@@ -455,51 +455,68 @@
       to { opacity: 0; }
     }
 
-    .promo-controls {
+    /* Top Small Mute / Sound Toggle Button */
+    .promo-mute-btn {
       position: absolute;
-      bottom: 20px;
-      display: flex;
-      gap: 10px;
-      z-index: 20;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(15px);
+      top: 16px;
+      right: 18px;
+      z-index: 55;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(18, 18, 24, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
       padding: 6px 14px;
-      border-radius: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-
-    .btn-ctrl {
-      background: #fff;
-      color: #000;
-      border: none;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 20px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+      user-select: none;
     }
 
-    .btn-ctrl:hover {
-      transform: scale(1.04);
-    }
-
-    .btn-ctrl-ghost {
-      background: rgba(255, 255, 255, 0.12);
+    .promo-mute-btn:hover {
+      background: rgba(35, 35, 48, 0.95);
+      border-color: rgba(255, 255, 255, 0.4);
       color: #fff;
+      transform: scale(1.04);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
     }
 
-    .video-switch-note {
-      position: absolute;
-      top: 14px;
-      right: 16px;
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.4);
-      background: rgba(0,0,0,0.5);
-      padding: 4px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      pointer-events: none;
+    .promo-mute-btn:active {
+      transform: scale(0.96);
+    }
+
+    .promo-mute-btn.is-active {
+      border-color: rgba(41, 151, 255, 0.55);
+      background: rgba(20, 35, 65, 0.9);
+      color: #70baff;
+      box-shadow: 0 0 16px rgba(41, 151, 255, 0.35);
+    }
+
+    .promo-mute-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      .promo-mute-btn {
+        top: 12px;
+        right: 12px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      .promo-mute-text {
+        display: none;
+      }
     }
 
     /* Social Proof Bar */
@@ -1072,9 +1089,18 @@
       <div class="hero-showcase" id="solucion">
         <div class="showcase-screen">
           <div class="flash-overlay" id="flashOverlay"></div>
-          <div class="video-switch-note">Cinematic Ad Player • Paper Vortex Studios</div>
           
-          <div class="promo-stage" id="promoStage">
+          <div class="promo-stage" id="promoStage" style="cursor: pointer;" title="Toca para activar/silenciar sonido">
+            <!-- Small Mute Button on Top of Video -->
+            <button class="promo-mute-btn" id="promoMuteBtn" onclick="toggleAudio(event)" title="Activar / Silenciar sonido" aria-label="Mute / Unmute">
+              <svg id="muteIcon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+              <span class="promo-mute-text" id="promoMuteText">Activar Sonido</span>
+            </button>
+
             <div class="promo-progress" id="promoProgress"></div>
             <div id="promoLogoWrap" class="promo-logo-wrap">
               <img src="logo-icon.png" alt="Paper Vortex Studios" class="promo-logo-img">
@@ -1082,16 +1108,6 @@
             <div class="promo-text" id="promoText">11:42 PM.</div>
             <div class="wa-bubble-wrap" id="waBubble">
               "Hola, ¿cuánto pide de renta y cuántos cuartos tiene?"
-            </div>
-
-            <!-- Controls overlay -->
-            <div class="promo-controls">
-              <button class="btn-ctrl" id="playBtn" onclick="togglePlay()">▶ Iniciar Video</button>
-              <button class="btn-ctrl btn-ctrl-ghost" id="soundBtn" onclick="toggleAudio()">🔊 Audio: ON</button>
-              <button class="btn-ctrl btn-ctrl-ghost" id="langBtn" onclick="toggleLanguage()">🌐 ES / EN</button>
-              <a href="apple_promo_video.html" target="_blank" class="btn-ctrl btn-ctrl-ghost" style="text-decoration:none;">⛶ Pantalla Completa</a>
-              <a href="apple_promo_video.mp4" download class="btn-ctrl btn-ctrl-ghost" style="text-decoration:none;">⬇ MP4 (16:9)</a>
-              <a href="apple_promo_video_vertical.mp4" download class="btn-ctrl btn-ctrl-ghost" style="text-decoration:none;">📱 MP4 (9:16)</a>
             </div>
           </div>
         </div>
@@ -1550,8 +1566,8 @@
 
     let currentStory = storyES;
     let step = 0;
-    let isPlaying = false;
-    let audioEnabled = true;
+    let isPlaying = true;
+    let audioEnabled = false;
     let timer = null;
     let audioCtx = null;
     let masterGain = null;
@@ -1867,46 +1883,7 @@
               }
               step++;
             } else if (frame.type === 'outro_logo') {
-              stopPercussionRhythm();
-              const textBox = document.getElementById('promoText');
-              const logoWrap = document.getElementById('promoLogoWrap');
-              const progressBar = document.getElementById('promoProgress');
-              
-              textBox.classList.remove('beat-impact', 'fade-out');
-              textBox.style.opacity = '1';
-              textBox.style.transition = '';
-              textBox.innerHTML = frame.text;
-              textBox.classList.add('active');
-              textBox.style.fontSize = 'clamp(24px, 4.2vw, 50px)';
-
-              logoWrap.classList.remove('fade-out');
-              logoWrap.style.display = 'block';
-              logoWrap.style.opacity = '1';
-
-              if (progressBar) progressBar.style.width = '100%';
-              play808(1.4);
-              playOutroPad(3.0);
-
-              // 1. A los 1.4s, las letras se desvanecen en 0.4s (desaparecen a los 1.8s)
-              setTimeout(() => {
-                if (isPlaying) {
-                  textBox.classList.add('fade-out');
-                }
-              }, 1400);
-
-              // 2. Exactamente 0.5s después de que desaparecen las letras (1.8s + 0.5s = 2.3s), el vortex se desvanece en 0.6s
-              setTimeout(() => {
-                if (isPlaying) {
-                  logoWrap.classList.add('fade-out');
-                }
-              }, 2300);
-
-              timer = setTimeout(() => {
-                if (isPlaying) {
-                  step = 0;
-                  nextFrame();
-                }
-              }, frame.dur);
+              showOutroLogo(frame);
               return;
             }
           }
@@ -1958,6 +1935,49 @@
       rhythmInterval = setInterval(beatTick, stepMs);
     }
 
+    function showOutroLogo(frame) {
+      stopPercussionRhythm();
+      const textBox = document.getElementById('promoText');
+      const logoWrap = document.getElementById('promoLogoWrap');
+      const progressBar = document.getElementById('promoProgress');
+      
+      textBox.classList.remove('beat-impact', 'fade-out');
+      textBox.style.opacity = '1';
+      textBox.style.transition = '';
+      textBox.innerHTML = frame.text;
+      textBox.classList.add('active');
+      textBox.style.fontSize = 'clamp(24px, 4.2vw, 50px)';
+
+      logoWrap.classList.remove('fade-out');
+      logoWrap.style.display = 'block';
+      logoWrap.style.opacity = '1';
+
+      if (progressBar) progressBar.style.width = '100%';
+      play808(1.4);
+      playOutroPad(3.0);
+
+      // 1. A los 1.4s, las letras se desvanecen en 0.4s (desaparecen a los 1.8s)
+      setTimeout(() => {
+        if (isPlaying) {
+          textBox.classList.add('fade-out');
+        }
+      }, 1400);
+
+      // 2. Exactamente 0.5s después de que desaparecen las letras (1.8s + 0.5s = 2.3s), el vortex se desvanece en 0.6s
+      setTimeout(() => {
+        if (isPlaying) {
+          logoWrap.classList.add('fade-out');
+        }
+      }, 2300);
+
+      timer = setTimeout(() => {
+        if (isPlaying) {
+          step = 0;
+          nextFrame();
+        }
+      }, frame.dur);
+    }
+
     function playOutroPad(duration = 3.0) {
       if (!audioEnabled || !audioCtx) return;
       playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], duration);
@@ -1979,6 +1999,12 @@
       const logoWrap = document.getElementById('promoLogoWrap');
       const flashOverlay = document.getElementById('flashOverlay');
       const progressBar = document.getElementById('promoProgress');
+
+      // Si entramos en el outro, ejecutar la secuencia del outro
+      if (frame.type === 'outro_logo') {
+        showOutroLogo(frame);
+        return;
+      }
 
       // Si entramos en la solución, el Beat Synchronizer toma el control
       if (frame.type === 'solution') {
@@ -2047,60 +2073,63 @@
       }
     }
 
-    function togglePlay() {
-      initAudio();
-      isPlaying = !isPlaying;
-      const btn = document.getElementById('playBtn');
-
-      if (isPlaying) {
-        btn.innerText = "⏸ Pausar";
-        if (step > 0 && step < currentStory.length && (currentStory[step].type === 'solution' || currentStory[step].type === 'comedy_wink')) {
-          startBeatSynchronizer();
-        } else {
-          nextFrame();
-        }
-      } else {
-        btn.innerText = "▶ Reanudar";
-        stopPercussionRhythm();
-        clearTimeout(timer);
-      }
-    }
-
-    function toggleAudio() {
+    function toggleAudio(e) {
+      if (e) e.stopPropagation();
       audioEnabled = !audioEnabled;
-      document.getElementById('soundBtn').innerText = audioEnabled ? "🔊 Audio: ON" : "🔇 Audio: OFF";
+      const muteBtn = document.getElementById('promoMuteBtn');
+      const muteText = document.getElementById('promoMuteText');
+      const muteIcon = document.getElementById('muteIcon');
+
       if (audioEnabled) {
         initAudio();
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        if (muteBtn) muteBtn.classList.add('is-active');
+        if (muteText) muteText.innerText = "Silenciar";
+        if (muteIcon) {
+          muteIcon.innerHTML = `
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          `;
+        }
       } else {
         stopPercussionRhythm();
+        if (muteBtn) muteBtn.classList.remove('is-active');
+        if (muteText) muteText.innerText = "Activar Sonido";
+        if (muteIcon) {
+          muteIcon.innerHTML = `
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          `;
+        }
       }
     }
 
-    function toggleLanguage() {
-      currentStory = (currentStory === storyES) ? storyEN : storyES;
-      document.getElementById('langBtn').innerText = (currentStory === storyES) ? "🌐 ES" : "🌐 EN";
-      clearTimeout(timer);
-      stopPercussionRhythm();
-      step = 0;
-      document.getElementById('promoProgress').style.width = '0%';
-      document.getElementById('promoLogoWrap').classList.remove('fade-out');
-      document.getElementById('promoLogoWrap').style.display = 'none';
-      document.getElementById('waBubble').style.display = 'none';
-      document.getElementById('promoText').classList.remove('cover-screen', 'beat-impact', 'fade-out');
-      document.getElementById('promoText').style.fontSize = '';
-      document.getElementById('promoText').style.opacity = '1';
-      document.getElementById('promoText').style.transition = '';
-      document.getElementById('promoText').innerHTML = (currentStory === storyES) ? "11:42 PM." : "11:42 PM.";
-      if (isPlaying) {
+    // Auto-reproducción continua en bucle (loop)
+    function startAutoplay() {
+      isPlaying = true;
+      audioEnabled = false;
+      if (!timer) {
         nextFrame();
       }
     }
 
-    window.addEventListener('click', () => {
-      if (!isPlaying && step === 0) {
-        togglePlay();
-      }
-    }, { once: true });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startAutoplay);
+    } else {
+      startAutoplay();
+    }
+
+    // Tocar el video activa/desactiva el sonido
+    const stageEl = document.getElementById('promoStage');
+    if (stageEl) {
+      stageEl.addEventListener('click', (e) => {
+        if (e.target.closest('#promoMuteBtn')) return;
+        toggleAudio(e);
+      });
+    }
   </script>
 </body>
 </html>
