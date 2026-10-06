@@ -175,9 +175,27 @@
       animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
+    .logo-outro.fade-out {
+      animation: fadeOutScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    }
+
     @keyframes fadeInScale {
       from { opacity: 0; transform: scale(0.7) translateY(20px); }
       to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes fadeOutScale {
+      from { opacity: 1; transform: scale(1) translateY(0); }
+      to { opacity: 0; transform: scale(0.92) translateY(-10px); }
+    }
+
+    .text-box.fade-out {
+      animation: textFadeOut 0.4s ease-out forwards !important;
+    }
+
+    @keyframes textFadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
 
     .logo-img {
@@ -373,7 +391,7 @@
 
       // Outro
       { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1200, type: "solution" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 4200, type: "outro_logo" }
+      { text: "PAPER VORTEX STUDIOS.", dur: 3500, type: "outro_logo" }
     ];
 
     const storyEN = [
@@ -407,7 +425,7 @@
 
       // Outro
       { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1200, type: "solution" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 4200, type: "outro_logo" }
+      { text: "PAPER VORTEX STUDIOS.", dur: 3500, type: "outro_logo" }
     ];
 
     let currentStory = storyES;
@@ -748,39 +766,42 @@
               const logoOutro = document.getElementById('logoOutro');
               const progressBar = document.getElementById('progressBar');
               
-              textBox.classList.remove('beat-impact');
+              textBox.classList.remove('beat-impact', 'fade-out');
               textBox.style.opacity = '1';
               textBox.style.transition = '';
               textBox.innerHTML = frame.text;
               textBox.classList.add('active');
               textBox.style.fontSize = 'clamp(32px, 5.5vw, 64px)';
 
+              logoOutro.classList.remove('fade-out');
               logoOutro.style.display = 'block';
               logoOutro.style.opacity = '1';
               logoOutro.style.transition = '';
 
               if (progressBar) progressBar.style.width = '100%';
               play808(1.4);
-              playOutroPad(3.8);
+              playOutroPad(3.0);
 
-              // 1. A los 1.8s, las letras ("PAPER VORTEX STUDIOS.") se desvanecen
+              // 1. A los 1.4s, las letras se desvanecen en 0.4s (desaparecen a los 1.8s)
               setTimeout(() => {
                 if (isPlaying) {
-                  textBox.style.transition = 'opacity 0.6s ease-out';
-                  textBox.style.opacity = '0';
+                  textBox.classList.add('fade-out');
                 }
-              }, 1800);
+              }, 1400);
 
-              // 2. A los 3.2s (el vortex queda ~1s solo en pantalla), el vortex se desvanece
+              // 2. Exactamente 0.5s después de que desaparecen las letras (1.8s + 0.5s = 2.3s), el vortex se desvanece en 0.6s
               setTimeout(() => {
                 if (isPlaying) {
-                  logoOutro.style.transition = 'opacity 0.8s ease-out';
-                  logoOutro.style.opacity = '0';
+                  logoOutro.classList.add('fade-out');
                 }
-              }, 3200);
+              }, 2300);
 
               timer = setTimeout(() => {
                 if (isPlaying) {
+                  if (window.__isExporting) {
+                    isPlaying = false;
+                    return;
+                  }
                   step = 0;
                   nextFrame();
                 }
@@ -867,11 +888,12 @@
       }
 
       // Reset states
-      textBox.classList.remove('active', 'cover-screen', 'beat-impact');
+      textBox.classList.remove('active', 'cover-screen', 'beat-impact', 'fade-out');
       textBox.style.fontSize = '';
       textBox.style.opacity = '1';
       textBox.style.transition = '';
       waBubble.style.display = 'none';
+      logoOutro.classList.remove('fade-out');
       logoOutro.style.display = 'none';
 
       textBox.innerHTML = frame.text;
@@ -965,9 +987,10 @@
       stopPercussionRhythm();
       step = 0;
       document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('logoOutro').classList.remove('fade-out');
       document.getElementById('logoOutro').style.display = 'none';
       document.getElementById('waBubble').style.display = 'none';
-      document.getElementById('textBox').classList.remove('cover-screen', 'beat-impact');
+      document.getElementById('textBox').classList.remove('cover-screen', 'beat-impact', 'fade-out');
       document.getElementById('textBox').style.fontSize = '';
       document.getElementById('textBox').innerHTML = (currentStory === storyES) 
         ? "TOCA INICIAR PARA VER EL ANUNCIO" 

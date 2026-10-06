@@ -256,7 +256,7 @@ async function renderAudioFromEvents(browser, events, totalDuration, outputPath)
       osc.stop(t + 1.26);
     }
     
-    function playOutroPad(t, duration = 3.8) {
+    function playOutroPad(t, duration = 3.0) {
       if (t < 0) t = 0;
       playSynthChord(t, [174.61, 207.65, 261.63, 311.13, 392.0], duration);
     }
@@ -293,7 +293,7 @@ async function renderAudioFromEvents(browser, events, totalDuration, outputPath)
           playWhooshRiser(t);
           break;
         case 'outroPad':
-          playOutroPad(t, evt.dur || 3.8);
+          playOutroPad(t, evt.dur || 3.0);
           break;
       }
     }
@@ -418,6 +418,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
     // ==========================================
     window.audioEnabled = true;
     window.audioCtx = { currentTime: 0, state: 'running', resume: () => {} };
+    window.__isExporting = true;
 
     window.__audioEvents = [];
     window.__slide0Painted = false;
@@ -469,7 +470,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
       recordEvt('whoosh');
     };
 
-    window.playOutroPad = function(duration = 3.8) {
+    window.playOutroPad = function(duration = 3.0) {
       recordEvt('outroPad', { dur: duration });
     };
 
@@ -530,7 +531,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
     togglePlay();
   });
 
-  const expectedDurationSec = 31.2;
+  const expectedDurationSec = 30.2;
   const startWallClock = Date.now();
   
   while ((Date.now() - startWallClock) / 1000 < expectedDurationSec) {
