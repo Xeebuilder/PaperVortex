@@ -420,14 +420,39 @@
     }
 
     .promo-progress {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 3px;
-      background: #2997ff;
-      width: 0%;
-      transition: width 0.1s linear;
-      box-shadow: 0 0 10px #2997ff;
+      display: none !important;
+    }
+
+    .promo-logo-wrap {
+      display: none;
+      margin-bottom: 25px;
+      animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      text-align: center;
+    }
+
+    .promo-logo-wrap.fade-out {
+      animation: fadeOutScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    }
+
+    .promo-logo-img {
+      height: clamp(130px, 18vw, 220px);
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 50px rgba(255, 255, 255, 0.45));
+    }
+
+    .promo-text.fade-out {
+      animation: textFadeOut 0.4s ease-out forwards !important;
+    }
+
+    @keyframes fadeOutScale {
+      from { opacity: 1; transform: scale(1) translateY(0); }
+      to { opacity: 0; transform: scale(0.92) translateY(-10px); }
+    }
+
+    @keyframes textFadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
 
     .promo-controls {
@@ -1051,8 +1076,8 @@
           
           <div class="promo-stage" id="promoStage">
             <div class="promo-progress" id="promoProgress"></div>
-            <div id="promoLogoWrap" style="display: none; margin-bottom: 24px; transition: all 0.4s ease; text-align: center;">
-              <img src="logo.png" alt="Paper Vortex Studios" style="max-height: 110px; width: auto; filter: drop-shadow(0 0 35px rgba(255,255,255,0.45));">
+            <div id="promoLogoWrap" class="promo-logo-wrap">
+              <img src="logo-icon.png" alt="Paper Vortex Studios" class="promo-logo-img">
             </div>
             <div class="promo-text" id="promoText">11:42 PM.</div>
             <div class="wa-bubble-wrap" id="waBubble">
@@ -1065,6 +1090,8 @@
               <button class="btn-ctrl btn-ctrl-ghost" id="soundBtn" onclick="toggleAudio()">🔊 Audio: ON</button>
               <button class="btn-ctrl btn-ctrl-ghost" id="langBtn" onclick="toggleLanguage()">🌐 ES / EN</button>
               <a href="apple_promo_video.html" target="_blank" class="btn-ctrl btn-ctrl-ghost" style="text-decoration:none;">⛶ Pantalla Completa</a>
+              <a href="apple_promo_video.mp4" download class="btn-ctrl btn-ctrl-ghost" style="text-decoration:none;">⬇ MP4 (16:9)</a>
+              <a href="apple_promo_video_vertical.mp4" download class="btn-ctrl btn-ctrl-ghost" style="text-decoration:none;">📱 MP4 (9:16)</a>
             </div>
           </div>
         </div>
@@ -1484,7 +1511,7 @@
 
       // Outro
       { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1200, type: "solution" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 2600, type: "outro_logo" }
+      { text: "PAPER VORTEX STUDIOS.", dur: 3500, type: "outro_logo" }
     ];
 
     const storyEN = [
@@ -1518,7 +1545,7 @@
 
       // Outro
       { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1200, type: "solution" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 2600, type: "outro_logo" }
+      { text: "PAPER VORTEX STUDIOS.", dur: 3500, type: "outro_logo" }
     ];
 
     let currentStory = storyES;
@@ -1844,14 +1871,36 @@
               const textBox = document.getElementById('promoText');
               const logoWrap = document.getElementById('promoLogoWrap');
               const progressBar = document.getElementById('promoProgress');
-              textBox.classList.remove('beat-impact');
+              
+              textBox.classList.remove('beat-impact', 'fade-out');
+              textBox.style.opacity = '1';
+              textBox.style.transition = '';
               textBox.innerHTML = frame.text;
               textBox.classList.add('active');
+              textBox.style.fontSize = 'clamp(24px, 4.2vw, 50px)';
+
+              logoWrap.classList.remove('fade-out');
               logoWrap.style.display = 'block';
-              textBox.style.fontSize = 'clamp(20px, 3.8vw, 42px)';
-              progressBar.style.width = '100%';
+              logoWrap.style.opacity = '1';
+
+              if (progressBar) progressBar.style.width = '100%';
               play808(1.4);
-              playOutroPad();
+              playOutroPad(3.0);
+
+              // 1. A los 1.4s, las letras se desvanecen en 0.4s (desaparecen a los 1.8s)
+              setTimeout(() => {
+                if (isPlaying) {
+                  textBox.classList.add('fade-out');
+                }
+              }, 1400);
+
+              // 2. Exactamente 0.5s después de que desaparecen las letras (1.8s + 0.5s = 2.3s), el vortex se desvanece en 0.6s
+              setTimeout(() => {
+                if (isPlaying) {
+                  logoWrap.classList.add('fade-out');
+                }
+              }, 2300);
+
               timer = setTimeout(() => {
                 if (isPlaying) {
                   step = 0;
@@ -1909,9 +1958,9 @@
       rhythmInterval = setInterval(beatTick, stepMs);
     }
 
-    function playOutroPad() {
+    function playOutroPad(duration = 3.0) {
       if (!audioEnabled || !audioCtx) return;
-      playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], 2.2);
+      playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], duration);
     }
 
     const chordFm = [174.61, 207.65, 261.63];
@@ -1939,8 +1988,12 @@
       }
 
       // Reset states
-      textBox.classList.remove('active', 'cover-screen', 'beat-impact');
+      textBox.classList.remove('active', 'cover-screen', 'beat-impact', 'fade-out');
+      textBox.style.fontSize = '';
+      textBox.style.opacity = '1';
+      textBox.style.transition = '';
       waBubble.style.display = 'none';
+      logoWrap.classList.remove('fade-out');
       logoWrap.style.display = 'none';
 
       textBox.innerHTML = frame.text;
@@ -2030,10 +2083,13 @@
       stopPercussionRhythm();
       step = 0;
       document.getElementById('promoProgress').style.width = '0%';
+      document.getElementById('promoLogoWrap').classList.remove('fade-out');
       document.getElementById('promoLogoWrap').style.display = 'none';
       document.getElementById('waBubble').style.display = 'none';
-      document.getElementById('promoText').classList.remove('cover-screen', 'beat-impact');
+      document.getElementById('promoText').classList.remove('cover-screen', 'beat-impact', 'fade-out');
       document.getElementById('promoText').style.fontSize = '';
+      document.getElementById('promoText').style.opacity = '1';
+      document.getElementById('promoText').style.transition = '';
       document.getElementById('promoText').innerHTML = (currentStory === storyES) ? "11:42 PM." : "11:42 PM.";
       if (isPlaying) {
         nextFrame();
