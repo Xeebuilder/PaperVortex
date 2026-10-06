@@ -61,13 +61,14 @@
     .text-box {
       font-size: clamp(38px, 6.8vw, 92px);
       font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1.05;
+      letter-spacing: -0.01em;
+      word-spacing: 0.3em;
+      line-height: 1.08;
       text-transform: uppercase;
       opacity: 0;
-      transform: scale(0.92);
-      transition: opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-      max-width: 1100px;
+      transform: scale(0.94);
+      transition: opacity 0.08s ease-out, transform 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+      max-width: 1150px;
       z-index: 10;
       will-change: transform, opacity;
     }
@@ -75,6 +76,22 @@
     .text-box.active {
       opacity: 1;
       transform: scale(1);
+    }
+
+    .text-box.beat-impact {
+      animation: beatImpact 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes beatImpact {
+      0% {
+        transform: scale(0.92);
+      }
+      50% {
+        transform: scale(1.025);
+      }
+      100% {
+        transform: scale(1);
+      }
     }
 
     /* Keyframes para que "CAMBIA ESO" crezca de forma limpia y expansiva hasta cubrir toda la pantalla */
@@ -292,18 +309,18 @@
       // Act 2: "CAMBIA ESO" - Crece de forma limpia cubriendo la pantalla con sonido WUUUUH
       { text: "<span class='highlight-red'>CAMBIA ESO.</span>", dur: 1250, type: "cover_screen" },
 
-      // Act 3: RITMO CONTINUO DE PERCUSIÓN (A la misma velocidad de lectura cómoda ~1.150ms)
-      { text: "ASISTENTE DE IA EN WHATSAPP.", dur: 1150, type: "solution" },
+      // Act 3: RITMO CONTINUO DE PERCUSIÓN SINCRONIZADO AL BEAT (Exactamente 1.200ms por slide)
+      { text: "ASISTENTE DE IA EN WHATSAPP.", dur: 1200, type: "solution" },
       { text: "CONECTADO A TU WEB <span class='highlight-gold'>EN 24 HORAS</span>.", dur: 1200, type: "solution" },
-      { text: "SABE SI ES <span class='highlight-gold'>VENTA O ALQUILER</span>.", dur: 1150, type: "solution" },
+      { text: "SABE SI ES <span class='highlight-gold'>VENTA O ALQUILER</span>.", dur: 1200, type: "solution" },
       { text: "CUARTOS. METRAJE. PRECIOS. HOA.", dur: 1200, type: "solution" },
-      { text: "CALIFICA EL PRESUPUESTO REAL.", dur: 1150, type: "solution" },
+      { text: "CALIFICA EL PRESUPUESTO REAL.", dur: 1200, type: "solution" },
       { text: "TE ENTREGA LA CITA <span class='highlight-green'>AGENDADA</span>.", dur: 1200, type: "solution" },
-      { text: "MIENTRAS DUERMES...", dur: 1100, type: "solution" },
-      { text: "<span class='highlight-comedy'>😉 (O sigues en tu cita)</span>", dur: 1250, type: "comedy_wink" },
+      { text: "MIENTRAS DUERMES...", dur: 1200, type: "solution" },
+      { text: "<span class='highlight-comedy'>😉 (O sigues en tu cita)</span>", dur: 1200, type: "comedy_wink" },
 
       // Outro
-      { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1350, type: "solution" },
+      { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1200, type: "solution" },
       { text: "PAPER VORTEX STUDIOS.", dur: 2600, type: "outro_logo" }
     ];
 
@@ -326,18 +343,18 @@
       // "CHANGE THAT"
       { text: "<span class='highlight-red'>CHANGE THAT.</span>", dur: 1250, type: "cover_screen" },
 
-      // Continuous Rhythmic Groove
-      { text: "24/7 AI AGENT ON WHATSAPP.", dur: 1150, type: "solution" },
+      // Continuous Rhythmic Groove Locked To Beat
+      { text: "24/7 AI AGENT ON WHATSAPP.", dur: 1200, type: "solution" },
       { text: "CONNECTED TO YOUR WEBSITE <span class='highlight-gold'>IN 24H</span>.", dur: 1200, type: "solution" },
-      { text: "KNOWS <span class='highlight-gold'>SALE OR RENT</span>.", dur: 1150, type: "solution" },
+      { text: "KNOWS <span class='highlight-gold'>SALE OR RENT</span>.", dur: 1200, type: "solution" },
       { text: "BEDROOMS. SQUARE FOOTAGE. HOA.", dur: 1200, type: "solution" },
-      { text: "QUALIFIES REAL BUYER FUNDS.", dur: 1150, type: "solution" },
+      { text: "QUALIFIES REAL BUYER FUNDS.", dur: 1200, type: "solution" },
       { text: "HANDS YOU THE <span class='highlight-green'>BOOKED TOUR</span>.", dur: 1200, type: "solution" },
-      { text: "WHILE YOU SLEEP...", dur: 1100, type: "solution" },
-      { text: "<span class='highlight-comedy'>😉 (Or stay on your date)</span>", dur: 1250, type: "comedy_wink" },
+      { text: "WHILE YOU SLEEP...", dur: 1200, type: "solution" },
+      { text: "<span class='highlight-comedy'>😉 (Or stay on your date)</span>", dur: 1200, type: "comedy_wink" },
 
       // Outro
-      { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1350, type: "solution" },
+      { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1200, type: "solution" },
       { text: "PAPER VORTEX STUDIOS.", dur: 2600, type: "outro_logo" }
     ];
 
@@ -628,61 +645,119 @@
       65.41, 0, 58.27, 51.91   // C2, Bb1, G#1
     ];
 
-    function startPercussionRhythm() {
-      if (rhythmInterval) clearInterval(rhythmInterval);
-      rhythmStep = 0;
-      const stepMs = 123; // 122 BPM semicorcheas
-
-      function triggerStep(s) {
-        if (!isPlaying || !audioEnabled || !audioCtx) return;
-        const t = audioCtx.currentTime;
-
-        // Kick en los 4 tiempos (0, 4, 8, 12) + syncopation en 10
-        if (s === 0 || s === 4 || s === 8 || s === 12 || s === 10) {
-          play808(s === 10 ? 0.65 : 1.0);
-        }
-
-        // Snare / Clap en tiempos 2 y 4 (pasos 4 y 12)
-        if (s === 4 || s === 12) {
-          playClap();
-        }
-
-        // Hi-Hat rítmico continuo en cada semicorchea
-        playSingleHat(t, s % 4 === 2);
-
-        // Open Hat en off-beats (pasos 6 y 14)
-        if (s === 6 || s === 14) {
-          playOpenHat(t);
-        }
-
-        // Bajo continuo
-        const note = bassRhythm[s];
-        if (note > 0) {
-          playBassTone(t, note);
-        }
-
-        // Acordes rítmicos en cada compás (pasos 0 y 8)
-        if (s === 0 || s === 8) {
-          const chord = s === 0 ? chordFm : chordDb;
-          playSynthChord(chord, 0.4);
-        }
-      }
-
-      // Dispara el downbeat inmediatamente al comenzar
-      triggerStep(0);
-      rhythmStep = 1;
-
-      rhythmInterval = setInterval(() => {
-        triggerStep(rhythmStep);
-        rhythmStep = (rhythmStep + 1) % 16;
-      }, stepMs);
-    }
-
     function stopPercussionRhythm() {
       if (rhythmInterval) {
         clearInterval(rhythmInterval);
         rhythmInterval = null;
       }
+    }
+
+    // Renderizado instantáneo de slide sincronizado con el golpe (beat-impact)
+    function renderFrame(frame) {
+      const textBox = document.getElementById('textBox');
+      const progressBar = document.getElementById('progressBar');
+      textBox.classList.remove('cover-screen', 'beat-impact');
+      textBox.innerHTML = frame.text;
+      void textBox.offsetWidth; // Forzar reflow para que beatImpact se dispare en el milisegundo exacto
+      textBox.classList.add('active', 'beat-impact');
+
+      const pct = ((step + 1) / currentStory.length) * 100;
+      progressBar.style.width = pct + '%';
+    }
+
+    // ==========================================
+    // BEAT SYNCHRONIZER (100 BPM)
+    // Sincroniza al 100% cada golpe de percusión con la aparición de las letras
+    // 150ms por semicorchea | 1.200ms cada 8 pasos (2 tiempos musicales)
+    // ==========================================
+    function startBeatSynchronizer() {
+      if (rhythmInterval) clearInterval(rhythmInterval);
+      rhythmStep = 0;
+      const stepMs = 150; // 100 BPM
+
+      function beatTick() {
+        if (!isPlaying) return;
+        const t = audioCtx ? audioCtx.currentTime : 0;
+
+        // --- CADA 8 PASOS (1.200 ms): CAMBIO DE DIAPOSITIVA AL MISMO TIEMPO QUE EL KICK ---
+        if (rhythmStep % 8 === 0) {
+          if (step < currentStory.length) {
+            const frame = currentStory[step];
+            if (frame.type === 'solution' || frame.type === 'comedy_wink') {
+              renderFrame(frame);
+              if (frame.type === 'comedy_wink') {
+                playComedyChime();
+              }
+              step++;
+            } else if (frame.type === 'outro_logo') {
+              // Fin de la solución -> Mostrar outro
+              stopPercussionRhythm();
+              const textBox = document.getElementById('textBox');
+              const logoOutro = document.getElementById('logoOutro');
+              const progressBar = document.getElementById('progressBar');
+              textBox.classList.remove('beat-impact');
+              textBox.innerHTML = frame.text;
+              textBox.classList.add('active');
+              logoOutro.style.display = 'block';
+              textBox.style.fontSize = 'clamp(24px, 4.5vw, 52px)';
+              progressBar.style.width = '100%';
+              play808(1.4);
+              playOutroPad();
+              timer = setTimeout(() => {
+                if (isPlaying) {
+                  step = 0;
+                  nextFrame();
+                }
+              }, frame.dur);
+              return;
+            }
+          }
+        }
+
+        // --- GOLPES DE PERCUSIÓN & BASSLINE ---
+        if (audioEnabled && audioCtx) {
+          const s = rhythmStep % 16;
+
+          // Kick en tiempo 1 (paso 0) y tiempo 3 (paso 8) + sincopado en paso 10
+          if (s === 0 || s === 8) {
+            play808(1.0);
+          } else if (s === 10) {
+            play808(0.65);
+          }
+
+          // Snare / Clap en tiempo 2 (paso 4) y tiempo 4 (paso 12)
+          if (s === 4 || s === 12) {
+            playClap();
+          }
+
+          // Hi-Hat rítmico continuo en cada semicorchea con acentos
+          playSingleHat(t, s % 2 === 0);
+
+          // Open Hat en contratiempos (pasos 6 y 14)
+          if (s === 6 || s === 14) {
+            playOpenHat(t);
+          }
+
+          // Bajo melódico continuo
+          const note = bassRhythm[s];
+          if (note > 0) {
+            playBassTone(t, note);
+          }
+
+          // Acordes de sintetizador en compases (pasos 0 y 8)
+          if (s === 0 || s === 8) {
+            const chord = (s === 0) ? chordFm : chordDb;
+            playSynthChord(chord, 0.42);
+          }
+        }
+
+        rhythmStep++;
+      }
+
+      // Dispara el downbeat y la primera diapositiva inmediatamente
+      beatTick();
+
+      rhythmInterval = setInterval(beatTick, stepMs);
     }
 
     // Grand Finale Pad
@@ -708,81 +783,67 @@
       const flashOverlay = document.getElementById('flashOverlay');
       const progressBar = document.getElementById('progressBar');
 
+      // Si entramos en la sección de solución, el Beat Synchronizer toma el control
+      if (frame.type === 'solution') {
+        flashOverlay.classList.remove('active');
+        startBeatSynchronizer();
+        return;
+      }
+
       // Reset states
-      textBox.classList.remove('active', 'cover-screen');
+      textBox.classList.remove('active', 'cover-screen', 'beat-impact');
       waBubble.style.display = 'none';
       logoOutro.style.display = 'none';
 
-      setTimeout(() => {
-        textBox.innerHTML = frame.text;
-        textBox.classList.add('active');
+      textBox.innerHTML = frame.text;
+      textBox.classList.add('active');
 
-        const pct = ((step + 1) / currentStory.length) * 100;
-        progressBar.style.width = pct + '%';
+      const pct = ((step + 1) / currentStory.length) * 100;
+      progressBar.style.width = pct + '%';
 
-        switch (frame.type) {
-          case 'intro':
-            stopPercussionRhythm();
-            playSynthChord(chordFm, 0.9);
-            break;
+      switch (frame.type) {
+        case 'intro':
+          stopPercussionRhythm();
+          playSynthChord(chordFm, 0.9);
+          break;
 
-          case 'beat_slow':
-            play808(0.85);
-            playSynthChord(chordFm, 0.45);
-            break;
+        case 'beat_slow':
+          play808(0.85);
+          playSynthChord(chordFm, 0.45);
+          break;
 
-          case 'bubble':
-            play808(0.75);
-            waBubble.innerText = frame.bubbleText;
-            waBubble.style.display = 'inline-block';
-            break;
+        case 'bubble':
+          play808(0.75);
+          waBubble.innerText = frame.bubbleText;
+          waBubble.style.display = 'inline-block';
+          break;
 
-          case 'comedic_prep':
-            playSynthChord(chordDb, 0.5);
-            break;
+        case 'comedic_prep':
+          playSynthChord(chordDb, 0.5);
+          break;
 
-          case 'comedy_pause':
-            playRecordScratch();
-            setTimeout(playComedyChime, 250);
-            break;
+        case 'comedy_pause':
+          playRecordScratch();
+          setTimeout(playComedyChime, 250);
+          break;
 
-          case 'tension_slow':
-            playSynthChord(chordBbm, 0.8);
-            break;
+        case 'tension_slow':
+          playSynthChord(chordBbm, 0.8);
+          break;
 
-          case 'cover_screen':
-            // "CAMBIA ESO": Agranda la letra limpiamente cubriendo la pantalla + Sonido WUUUUH
-            textBox.classList.add('cover-screen');
-            playWhooshRiser();
-            setTimeout(() => {
-              flashOverlay.classList.add('active');
-            }, 1050);
-            break;
+        case 'cover_screen':
+          textBox.classList.add('cover-screen');
+          playWhooshRiser();
+          setTimeout(() => {
+            flashOverlay.classList.add('active');
+          }, 1050);
+          break;
+      }
 
-          case 'solution':
-            flashOverlay.classList.remove('active');
-            // Las diapositivas avanzan a paso legible mientras el ritmo suena continuo de fondo
-            if (!rhythmInterval) startPercussionRhythm();
-            break;
-
-          case 'comedy_wink':
-            playComedyChime();
-            break;
-
-          case 'outro_logo':
-            stopPercussionRhythm();
-            logoOutro.style.display = 'block';
-            textBox.style.fontSize = 'clamp(24px, 4.5vw, 52px)';
-            play808(1.4);
-            playOutroPad();
-            break;
-        }
-
-        step++;
-        if (isPlaying) {
-          timer = setTimeout(nextFrame, frame.dur);
-        }
-      }, 50);
+      step++;
+      if (isPlaying) {
+        timer = setTimeout(nextFrame, frame.dur);
+      }
     }
 
     function togglePlay() {
@@ -792,7 +853,11 @@
 
       if (isPlaying) {
         btn.innerText = "⏸ Pausar";
-        nextFrame();
+        if (step > 0 && step < currentStory.length && (currentStory[step].type === 'solution' || currentStory[step].type === 'comedy_wink')) {
+          startBeatSynchronizer();
+        } else {
+          nextFrame();
+        }
       } else {
         btn.innerText = "▶ Reanudar";
         stopPercussionRhythm();
@@ -823,6 +888,8 @@
       document.getElementById('progressBar').style.width = '0%';
       document.getElementById('logoOutro').style.display = 'none';
       document.getElementById('waBubble').style.display = 'none';
+      document.getElementById('textBox').classList.remove('cover-screen', 'beat-impact');
+      document.getElementById('textBox').style.fontSize = '';
       document.getElementById('textBox').innerHTML = (currentStory === storyES) 
         ? "TOCA INICIAR PARA VER EL ANUNCIO" 
         : "TAP PLAY TO WATCH THE AD";
