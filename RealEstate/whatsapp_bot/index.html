@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inmobiliaria AI | Base de Datos & Bot de WhatsApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #090b10;
+    --card: #121620;
+    --card-border: #1e2433;
+    --accent: #2563eb;
+    --accent-gold: #d4af37;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .logo-title h1 {
+    font-size: 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge-gold {
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--accent-gold);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .status-badges {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pill-connected {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+  }
+  .pill-disconnected {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+  }
+  .pill-count {
+    background: rgba(37, 99, 235, 0.15);
+    border: 1px solid rgba(37, 99, 235, 0.4);
+    color: #93c5fd;
+  }
+
+  /* Grid Layout */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .card-box {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 24px;
+  }
+  .card-box h2 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+
+  /* Scraper form */
+  .input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  input[type="url"], input[type="text"], textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: #090b10;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: filter 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+  .btn-gold {
+    background: linear-gradient(135deg, #c5a059, #e5c179);
+    color: #0f1117;
+  }
+
+  /* Property Inventory */
+  .prop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .prop-item {
+    background: #0c0f17;
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+  .prop-item:hover {
+    border-color: rgba(37, 99, 235, 0.4);
+  }
+  .prop-info h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .prop-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .tag {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .tag-price {
+    color: #34d399;
+    font-weight: 700;
+    background: rgba(16, 185, 129, 0.12);
+  }
+  .tag-airbnb {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+  }
+  .prop-features {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+  .btn-del {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .btn-del:hover {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  /* Chat Simulator */
+  .chat-box {
+    display: flex;
+    flex-direction: column;
+    height: 480px;
+    background: #0c0f17;
+    border-radius: 14px;
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+  }
+  .chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .msg-ai {
+    background: #1a202c;
+    color: #e2e8f0;
+    align-self: flex-start;
+  }
+  .msg-user {
+    background: var(--accent);
+    color: #fff;
+    align-self: flex-end;
+  }
+  .chat-footer {
+    display: flex;
+    padding: 12px;
+    border-top: 1px solid var(--card-border);
+    gap: 8px;
+    background: #090b10;
+  }
+
+  .loading-bar {
+    display: none;
+    font-size: 13px;
+    color: var(--accent-gold);
+    margin-top: 8px;
+    align-items: center;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-title">
+      <h1>🏢 Inmobiliaria AI <span class="badge-gold">Base de Datos & Bot WhatsApp</span></h1>
+    </div>
+    <div class="status-badges">
+      <div id="waStatus" class="pill pill-disconnected">⚪ Verificando WhatsApp...</div>
+      <div id="propCount" class="pill pill-count">🏠 0 Propiedades Activas</div>
+    </div>
+  </header>
+
+  <div class="grid-2">
+    <!-- LEFT COLUMN: Scraper & Inventory -->
+    <div>
+      <!-- Box 1: Web Ingestion -->
+      <div class="card-box">
+        <h2>🌐 1. Extraer Catálogo desde Página Web con IA</h2>
+        <p class="sub-hint">Ingresa la URL de la página web de la inmobiliaria o broker (ej. su sección de propiedades o listados). Gemini la analizará y extraerá automáticamente el inventario exacto con nombres, zonas y precios.</p>
+        
+        <div class="input-group">
+          <input type="url" id="scrapeUrl" placeholder="https://inmobiliaria-ejemplo.com/propiedades">
+          <button class="btn-primary btn-gold" onclick="scrapeWeb()">
+            Extraer con IA
+          </button>
+        </div>
+
+        <details style="margin-top: 10px; font-size: 12px; color: var(--text-muted); cursor: pointer;">
+          <summary>¿Prefieres pegar texto o catálogo manual?</summary>
+          <div style="margin-top: 8px;">
+            <textarea id="rawText" placeholder="Pega aquí la descripción o lista de casas/condominios..."></textarea>
+            <button class="btn-primary" style="margin-top: 6px; font-size: 12px; padding: 8px 14px;" onclick="scrapeRawText()">Procesar Texto con IA</button>
+          </div>
+        </details>
+
+        <div id="loading" class="loading-bar">
+          ⏳ Gemini analizando el sitio web y estructurando las propiedades...
+        </div>
+      </div>
+
+      <!-- Box 2: Active Inventory -->
+      <div class="card-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2>📋 2. Inventario Sincronizado en Tiempo Real</h2>
+          <button class="btn-primary" style="font-size: 12px; padding: 6px 12px;" onclick="toggleAddForm()">+ Agregar Manual</button>
+        </div>
+        <p class="sub-hint">Cada cambio en esta lista se actualiza <b>inmediatamente</b> en el bot de WhatsApp. Cuando pregunten por precios o ubicaciones, la IA responderá con ESTA información.</p>
+
+        <!-- Hidden Add Form -->
+        <div id="addForm" style="display: none; background: #090b10; padding: 14px; border-radius: 12px; margin-bottom: 14px; border: 1px solid var(--card-border);">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+            <input type="text" id="newTitle" placeholder="Título (ej: Brickell City Tower)">
+            <input type="text" id="newZone" placeholder="Zona (ej: Brickell)">
+            <input type="text" id="newPrice" placeholder="Precio (ej: $680,000)">
+            <input type="text" id="newType" placeholder="Tipo (ej: Condominio, Casa)">
+            <input type="text" id="newBeds" placeholder="Habitaciones / Baños (ej: 2 / 2)">
+            <input type="text" id="newHoa" placeholder="HOA (ej: $750/mes)">
+          </div>
+          <textarea id="newFeatures" placeholder="Características clave y amenidades..."></textarea>
+          <div style="margin-top: 8px; display: flex; gap: 8px;">
+            <button class="btn-primary" onclick="saveManualProperty()">Guardar Propiedad</button>
+            <button style="background: none; border: none; color: var(--text-muted); cursor: pointer;" onclick="toggleAddForm()">Cancelar</button>
+          </div>
+        </div>
+
+        <div class="prop-list" id="propList">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Live Simulator -->
+    <div>
+      <div class="card-box" style="position: sticky; top: 24px;">
+        <h2>💬 3. Simulador en Vivo del Bot</h2>
+        <p class="sub-hint">Hazle una pregunta de prueba aquí para verificar exactamente cómo le responderá el bot a los clientes en WhatsApp con la base de datos actual.</p>
+
+        <div class="chat-box">
+          <div class="chat-history" id="chatHistory">
+            <div class="chat-msg msg-ai">
+              ¡Hola! Soy el asistente de IA con acceso directo a la base de datos de nuestra inmobiliaria. ¿Qué propiedades buscas hoy?
+            </div>
+          </div>
+          <div class="chat-footer">
+            <input type="text" id="simInput" placeholder="Ej: ¿Qué apartamentos tienes en Brickell y qué precios tienen?" onkeypress="if(event.key==='Enter') sendSimMessage()">
+            <button class="btn-primary" onclick="sendSimMessage()">Enviar</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px;">
+          <button style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: #94a3b8; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer;" onclick="quickAsk('¿Qué tienes en Brickell y cuánto cuesta?')">"¿Qué tienes en Brickell?"</button>
+          <button style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: #94a3b8; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer;" onclick="quickAsk('¿Tienes opciones para Airbnb y qué retorno dan?')">"¿Opciones para Airbnb?"</button>
+          <button style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: #94a3b8; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer;" onclick="quickAsk('¿Tienen casas en Doral para familias?')">"¿Casas en Doral?"</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    const stEl = document.getElementById('waStatus');
+    if (data.connected) {
+      stEl.className = 'pill pill-connected';
+      stEl.textContent = '🟢 WhatsApp Conectado y Sincronizado';
+    } else {
+      stEl.className = 'pill pill-disconnected';
+      stEl.textContent = '🟡 WhatsApp Esperando Escaneo QR';
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function loadProperties() {
+  try {
+    const res = await fetch('/api/kb');
+    const data = await res.json();
+    const props = data.properties || [];
+    document.getElementById('propCount').textContent = `🏠 ${props.length} Propiedades Activas`;
+
+    const listEl = document.getElementById('propList');
+    listEl.innerHTML = '';
+
+    if (props.length === 0) {
+      listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">No hay propiedades registradas aún. Extrae una web o agrega una manualmente arriba.</div>';
+      return;
+    }
+
+    props.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'prop-item';
+      item.innerHTML = `
+        <div class="prop-info">
+          <h3>${p.title}</h3>
+          <div class="prop-meta">
+            <span class="tag tag-price">${p.price}</span>
+            <span class="tag">${p.zone}</span>
+            <span class="tag">${p.type}</span>
+            ${p.beds ? `<span class="tag">${p.beds} hab / ${p.baths} baños</span>` : ''}
+            ${p.airbnbAllowed ? `<span class="tag tag-airbnb">⭐ Airbnb Diario</span>` : ''}
+          </div>
+          <div class="prop-features">${p.features || ''}</div>
+        </div>
+        <button class="btn-del" onclick="deleteProp('${p.id}')">Eliminar</button>
+      `;
+      listEl.appendChild(item);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function scrapeWeb() {
+  const url = document.getElementById('scrapeUrl').value.trim();
+  if (!url) return alert('Por favor ingresa una URL válida.');
+
+  const loadEl = document.getElementById('loading');
+  loadEl.style.display = 'flex';
+
+  try {
+    const res = await fetch('/api/scrape', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    loadEl.style.display = 'none';
+
+    if (data.ok) {
+      alert(`¡Éxito! Se extrajeron y sincronizaron ${data.extracted?.properties?.length || 0} propiedades.`);
+      loadProperties();
+    } else {
+      alert('Error: ' + (data.error || 'No se pudo extraer'));
+    }
+  } catch (err) {
+    loadEl.style.display = 'none';
+    alert('Error al conectar con el servidor: ' + err.message);
+  }
+}
+
+async function scrapeRawText() {
+  const rawText = document.getElementById('rawText').value.trim();
+  if (!rawText) return alert('Ingresa algún texto.');
+
+  const loadEl = document.getElementById('loading');
+  loadEl.style.display = 'flex';
+
+  try {
+    const res = await fetch('/api/scrape', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rawText })
+    });
+    const data = await res.json();
+    loadEl.style.display = 'none';
+
+    if (data.ok) {
+      alert(`¡Éxito! Propiedades agregadas al inventario.`);
+      document.getElementById('rawText').value = '';
+      loadProperties();
+    }
+  } catch (err) {
+    loadEl.style.display = 'none';
+    alert('Error: ' + err.message);
+  }
+}
+
+async function deleteProp(id) {
+  if (!confirm('¿Deseas eliminar esta propiedad de la base de datos?')) return;
+  await fetch(`/api/properties/${id}`, { method: 'DELETE' });
+  loadProperties();
+}
+
+function toggleAddForm() {
+  const form = document.getElementById('addForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveManualProperty() {
+  const title = document.getElementById('newTitle').value.trim();
+  const zone = document.getElementById('newZone').value.trim();
+  const price = document.getElementById('newPrice').value.trim();
+  const type = document.getElementById('newType').value.trim();
+  const beds = document.getElementById('newBeds').value.trim();
+  const hoa = document.getElementById('newHoa').value.trim();
+  const features = document.getElementById('newFeatures').value.trim();
+
+  if (!title || !price) return alert('Título y Precio son requeridos.');
+
+  await fetch('/api/properties', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, zone, price, type, beds, hoa, features })
+  });
+
+  toggleAddForm();
+  loadProperties();
+}
+
+// Chat Simulator
+async function sendSimMessage() {
+  const input = document.getElementById('simInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const chatHistory = document.getElementById('chatHistory');
+  
+  // Add user message
+  const userDiv = document.createElement('div');
+  userDiv.className = 'chat-msg msg-user';
+  userDiv.textContent = msg;
+  chatHistory.appendChild(userDiv);
+  input.value = '';
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+
+  // Typing state
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'chat-msg msg-ai';
+  aiDiv.textContent = '⏳ Consultando inventario...';
+  chatHistory.appendChild(aiDiv);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+
+  try {
+    const res = await fetch('/api/test-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    aiDiv.innerHTML = (data.reply || '').replace(/\n/g, '<br>');
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  } catch (err) {
+    aiDiv.textContent = 'Error consultando al bot: ' + err.message;
+  }
+}
+
+function quickAsk(text) {
+  document.getElementById('simInput').value = text;
+  sendSimMessage();
+}
+
+// Init
+loadStatus();
+loadProperties();
+setInterval(loadStatus, 5000);
+</script>
+</body>
+</html>

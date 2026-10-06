@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outreach WhatsApp</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1115; color: #e8e8e8; margin: 0; padding: 24px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { color: #8a8f98; margin-bottom: 20px; font-size: 14px; }
+  .config { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #181b21; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+  .config label { font-size: 12px; color: #8a8f98; display: block; margin-bottom: 4px; }
+  .config input, .config textarea { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2a2f38; background: #0f1115; color: #e8e8e8; font-size: 14px; }
+  .config textarea { min-height: 200px; font-family: inherit; line-height: 1.4; }
+  .config .full { grid-column: 1 / -1; }
+  .hint { font-size: 12px; color: #8a8f98; margin-top: 4px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .hint button { background: none; border: none; color: #25d366; cursor: pointer; font-size: 12px; padding: 0; }
+  .bar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .bar button { padding: 8px 12px; border-radius: 8px; border: 1px solid #2a2f38; background: #181b21; color: #e8e8e8; cursor: pointer; }
+  .bar button.active { background: #25d366; color: #000; border-color: #25d366; }
+  .progress { margin-left: auto; font-size: 14px; color: #8a8f98; }
+  .card { background: #181b21; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr auto; gap: 10px; border: 1px solid transparent; }
+  .card.sent { opacity: 0.45; border-color: #25d36655; }
+  .name { font-weight: 600; font-size: 16px; }
+  .meta { font-size: 12px; color: #8a8f98; margin: 2px 0 8px; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #2a2f38; margin-right: 6px; }
+  .idea { font-size: 13px; color: #c9cdd4; line-height: 1.4; }
+  .preview { font-size: 13px; color: #c9cdd4; white-space: pre-wrap; margin-top: 10px; display: none; background: #0f1115; padding: 10px; border-radius: 8px; line-height: 1.4; }
+  .card.open .preview { display: block; }
+  .actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; min-width: 150px; }
+  .actions a, .actions button { text-align: center; padding: 8px 10px; border-radius: 8px; font-size: 13px; text-decoration: none; cursor: pointer; border: 1px solid #2a2f38; background: #0f1115; color: #e8e8e8; }
+  .actions a.wa { background: #25d366; color: #000; border-color: #25d366; font-weight: 600; }
+  .actions label { font-size: 12px; color: #8a8f98; display: flex; gap: 6px; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<h1>📲 Outreach WhatsApp</h1>
+<div class="sub">Pulsa "Abrir WhatsApp" → se abre el chat con el mensaje ya escrito → tú solo le das Enviar. Se marca como enviado automáticamente.</div>
+
+<div class="config">
+  <div><label>Tu nombre</label><input id="myName"></div>
+  <div><label>Precio ($)</label><input id="price"></div>
+  <div class="full">
+    <label>Plantilla del mensaje (misma estructura para todos, la idea cambia por negocio)</label>
+    <textarea id="tpl"></textarea>
+    <div class="hint">
+      <span>Variables: {nombre} {negocio} {idea} {desc} {resultado} {precio}</span>
+      <button id="restoreTpl">Restaurar plantilla original</button>
+    </div>
+  </div>
+</div>
+
+<div class="bar">
+  <button data-f="all" class="active">Todos</button>
+  <button data-f="Lechería">Lechería</button>
+  <button data-f="Caracas">Caracas</button>
+  <button data-f="pending">Pendientes</button>
+  <button id="reset">Reiniciar enviados</button>
+  <div class="progress" id="progress"></div>
+</div>
+
+<div id="list"></div>
+
+<script>
+const DEFAULTS = { myName: "Maximiliano Rodriguez", price: "30" };
+
+const DEFAULT_TPL =
+`Soy {nombre}, desarrollador web. Creo páginas informativas, páginas interactivas y bots de WhatsApp para negocios.
+
+Para {negocio} se me ocurrió una idea: {idea}. {desc}
+
+Todo se comunica directo por WhatsApp, así que a ustedes solo les llega {resultado}. Nada de responder las mismas preguntas una y otra vez.
+
+Se la dejo funcionando en 24h por \${precio} (50% al inicio, 50% al entregar).
+
+¿Les gustaría ver otras páginas que he desarrollado o ver más o menos un flujo de trabajo de cómo sería?`;
+
+// What the business ends up receiving
+const R = {
+  pedido: "el pedido final, listo para preparar",
+  cita: "la cita confirmada, con el servicio ya elegido",
+  diseno: "la cita confirmada, con el diseño ya elegido",
+  reserva: "la reserva final, con todo ya definido",
+  inscripcion: "la inscripción final, con el plan ya elegido",
+  solicitud: "la solicitud final, con el evento y los servicios ya definidos",
+};
+
+// p = phone in international format (no + or spaces)
+const BIZ = [
+  // ---------------- Lechería ----------------
+  { n: "Capibara Food", c: "Lechería", t: "Comida", p: "584129001424", r: R.pedido,
+    idea: "Calcula tu fiesta",
+    d: `Es una página donde el cliente anota cuántos invitados tiene y le calcula cuántos tequeños y pastelitos necesita, con el mix de sabores y el total ya calculado. Por ejemplo: "somos 20" → 100 tequeños (60 de queso, 40 mixtos) + 40 pastelitos.` },
+  { n: "Caramba", c: "Lechería", t: "Comida", p: "584248356535", r: R.pedido,
+    idea: "Arma el pedido para tu grupo",
+    d: `Es una página donde el cliente anota cuántas personas van a comer (y su presupuesto, si quiere) y le recomienda los mejores combos de comida china, pollo o hamburguesas, con el total ya calculado. Por ejemplo: "somos 6" → 2 combos familiares + 1 arroz chino + refrescos.` },
+  { n: "Tokio", c: "Lechería", t: "Comida", p: "584248391973", r: R.pedido,
+    idea: "Arma tu roll",
+    d: `Es una página donde el cliente arma su propio roll o poke: elige base, proteína, toppings y salsa, ve el precio en vivo y su creación recibe un nombre estilo anime para compartir en historias. Por ejemplo: salmón + aguacate + queso crema + anguila → "Roll Dragón de Fuego".` },
+  { n: "Oggi Pizza", c: "Lechería", t: "Comida", p: "584248674569", r: R.pedido,
+    idea: "Arma tu pizza por mitades",
+    d: `Es una página con una pizza en pantalla donde el cliente pone los ingredientes en cada mitad o cuarto y ve exactamente cómo queda, con el precio ya calculado. Por ejemplo: familiar, mitad pepperoni y mitad champiñones con maíz.` },
+  { n: "El Moroco", c: "Lechería", t: "Restaurante", p: "584141842404", r: R.reserva,
+    idea: "Reserva tu mesa y tu paella",
+    d: `Es una página donde el cliente elige su mesa en un plano del local, indica cuántas personas van y la ocasión, y deja la paella preordenada para no tener que esperar. Por ejemplo: "6 personas, cumpleaños, 8pm" → mesa 4 + paella marinera lista al llegar.` },
+  { n: "Tortas Miriam", c: "Lechería", t: "Repostería", p: "584148069100", r: R.pedido,
+    idea: "Diseña tu torta",
+    d: `Es una página donde el cliente diseña su torta: elige pisos, sabor, relleno, color de cobertura y el texto, y ve la torta dibujada con el precio ya calculado. Por ejemplo: 2 pisos, chocolate con dulce de leche, cobertura rosada, "Feliz 15 Sofía".` },
+  { n: "La Principal Bakery", c: "Lechería", t: "Panadería", p: "584123846269", r: R.pedido,
+    idea: "Desayuno para tu oficina",
+    d: `Es una página donde una persona arma el desayuno de toda su oficina: anota cuántos son, cada quien elige su combo y el pedido sale ordenado por nombre con el total. Por ejemplo: "somos 8" → 5 combos de cachito + café y 3 de pan con jamón + jugo.` },
+  { n: "El Verdadero Sabor Zuliano", c: "Lechería", t: "Comida", p: "584149842634", r: R.pedido,
+    idea: "Arma tu docena",
+    d: `Es una página donde el cliente anota cuántas personas son, le sugiere cuántas docenas de pastelitos pedir y puede mezclar los sabores con un contador visual. Por ejemplo: "somos 10" → 2 docenas de queso, pollo, carne molida y papa con queso.` },
+  { n: "Russo's Barber Shop", c: "Lechería", t: "Barbería", p: "584248847704", r: R.cita,
+    idea: "¿Qué corte te queda?",
+    d: `Es una página donde el cliente responde un quiz rápido sobre la forma de su cara, le recomienda los cortes que mejor le quedan con foto, y agenda con barbero y hora. Por ejemplo: cara redonda → mid fade con textura arriba, jueves 4pm.` },
+  { n: "La Mafia Barber Club", c: "Lechería", t: "Barbería", p: "584121095276", r: R.cita,
+    idea: "Únete a la Familia",
+    d: `Es una página de citas donde el cliente elige corte, barbero y hora, y va subiendo de rango con cada visita (Soldado → Capo → Don), desbloqueando beneficios. Por ejemplo: 5 visitas → Capo → arreglo de barba gratis.` },
+  { n: "Viky Stylos", c: "Lechería", t: "Belleza", p: "584121937954", r: R.diseno,
+    idea: "Diseña tus uñas",
+    d: `Es una página con una mano en pantalla donde la clienta diseña sus uñas: elige color, acabado y decoración para cada uña, y agenda su cita con el diseño ya listo. Por ejemplo: semipermanente nude, francés en el anular con brillos, sábado 10am.` },
+  { n: "Concepto's", c: "Lechería", t: "Belleza", p: "584121835083", r: R.cita,
+    idea: "Prueba tu color de cabello",
+    d: `Es una página donde la clienta prueba tonos de cabello sobre una foto, indica el largo de su cabello y recibe el precio al instante antes de agendar. Por ejemplo: balayage miel, cabello largo → precio y cita para el viernes.` },
+  { n: "New Power Gym", c: "Lechería", t: "Gimnasio", p: "584147877021", r: R.inscripcion,
+    idea: "Encuentra tu plan",
+    d: `Es una página donde la persona anota su objetivo, su peso y cuántos días puede entrenar, y le recomienda el plan ideal con el precio para inscribirse. Por ejemplo: "bajar 5 kg, 3 días a la semana" → plan mensual + 2 sesiones con entrenador.` },
+  { n: "Corpus Gym", c: "Lechería", t: "Gimnasio", p: "584248222267", r: R.inscripcion,
+    idea: "Reto 30 días",
+    d: `Es una página de inscripción a un reto de 30 días donde cada persona tiene su propio tracker de progreso y recibe recordatorios para no abandonar. Por ejemplo: reto de abdomen, 30 días, check diario de asistencia.` },
+  { n: "Pow Fitness", c: "Lechería", t: "Gimnasio", p: "584127563518", r: R.reserva,
+    idea: "Reserva tu clase",
+    d: `Es una página con el horario de clases donde la persona ve cuántos cupos quedan y reserva el suyo en segundos. Por ejemplo: spinning martes 6pm → quedan 3 cupos → reservado.` },
+  { n: "Adamant Flowers", c: "Lechería", t: "Floristería", p: "584128779539", r: R.pedido,
+    idea: "Arma tu ramo",
+    d: `Es una página donde el cliente arma su ramo: elige flores, colores, cantidad, envoltorio y tarjeta, y ve el ramo armándose en pantalla con el precio ya calculado. Por ejemplo: 12 rosas rojas + un girasol al centro, papel kraft, tarjeta "Te amo".` },
+  { n: "Super Pets", c: "Lechería", t: "Mascotas", p: "584140852072", r: R.cita,
+    idea: "La ficha de tu mascota",
+    d: `Es una página donde el cliente registra a su mascota, elige el servicio que necesita y recibe recordatorios de vacunas y baños. Por ejemplo: golden de 3 años → baño + corte el sábado, y recordatorio de vacuna en noviembre.` },
+  { n: "Dr. Perrogato", c: "Lechería", t: "Mascotas", p: "584248873744", r: R.pedido,
+    idea: "Calcula la comida de tu mascota",
+    d: `Es una página donde el cliente anota el peso y la edad de su mascota y le calcula cuánta comida necesita al mes, con el saco recomendado. Por ejemplo: perro adulto de 15 kg → saco de 15 kg al mes, listo para delivery.` },
+  { n: "Burger Shack", c: "Lechería", t: "Comida", p: "584123330420", r: R.pedido,
+    idea: "Combo Shack para tu grupo",
+    d: `Es una página donde el cliente anota cuántos son y si quieren hamburguesas sencillas o dobles, y le sugiere el combo exacto con papas y bebidas al mejor precio. Por ejemplo: "somos 4" → 4 Shack burgers + 2 papas grandes + 4 bebidas con descuento.` },
+  { n: "Emperrate Self Service", c: "Lechería", t: "Comida", p: "584248468769", r: R.pedido,
+    idea: "Arma tu perro caliente",
+    d: `Es una página interactiva donde el cliente elige el tipo de salchicha, salsas y todos los toppings especiales que quiere ponerle a su perro caliente viendo cómo se va armando con el precio exacto. Por ejemplo: perro especial con queso fundido, tocineta crocante y maíz.` },
+  { n: "Dore's", c: "Lechería", t: "Comida", p: "584125465308", r: R.pedido,
+    idea: "Balde de pollo para tu reunión",
+    d: `Es una página donde el cliente anota cuántas personas van a comer y le calcula cuántas piezas de pollo broaster, raciones de papas o arepitas y salsas necesitan para que rinda exacto. Por ejemplo: "somos 5" → Balde de 12 piezas + 3 papas + ensalada cole slaw.` },
+  { n: "Sushi&Cebiches", c: "Lechería", t: "Comida", p: "584243767198", r: R.pedido,
+    idea: "Barco de sushi a tu medida",
+    d: `Es una página donde el cliente elige el tamaño de la bandeja o barco (20, 30 o 50 piezas) y va seleccionando los rolls fríos, calientes y cebiches favoritos con el precio total en vivo. Por ejemplo: Barco de 30 piezas → 10 Alaska, 10 Fuji tempura y 10 dinamita especial.` },
+  { n: "Beijing Asian Cuisine", c: "Lechería", t: "Comida", p: "584242560337", r: R.pedido,
+    idea: "Arma tu banquete asiático",
+    d: `Es una página donde el cliente indica cuántas personas van a comer y le combina las porciones de arroz especial, lumpias, pollo agridulce y costillitas para que rinda exacto. Por ejemplo: "somos 4" → Combo especial con arroz mixto + 4 lumpias + pollo agridulce.` },
+  { n: "Marumi Sushi", c: "Lechería", t: "Comida", p: "584121158385", r: R.pedido,
+    idea: "Combo Lunch Express",
+    d: `Es una página rápida donde el cliente elige su combo de mediodía o cena (roll + bebida o entrada) en 3 clics y el pedido entra con la hora estimada de delivery o retiro. Por ejemplo: Roll Especial + gyozas de entrada para la 1:00 PM.` },
+  { n: "MC RACUCHOS", c: "Lechería", t: "Comida", p: "584128374661", r: R.pedido,
+    idea: "Arma tu Patacón o Cabimera",
+    d: `Es una página donde el cliente elige la base (plátano verde, maduro o arepa), el tipo de carne (pernil, mechada, pollo o mixta) y los quesos y salsas zulianas, viendo el total en pantalla. Por ejemplo: Patacón mixto con queso de mano y salsa tártara.` },
+  { n: "Bungerz", c: "Lechería", t: "Comida", p: "584122867770", r: R.pedido,
+    idea: "Dúo Burger & Shake",
+    d: `Es una página interactiva donde el cliente combina su hamburguesa favorita con una merengada o postre artesanal con precio en combo promocional. Por ejemplo: Doble queso tocino + merengada de Oreo con crema batida.` },
+
+  // ---------------- Caracas ----------------
+  { n: "Duo MC Repostería", c: "Caracas", t: "Eventos", p: "584126268750", r: R.pedido,
+    idea: "Mesa de dulces para tu evento",
+    d: `Es una página donde el cliente anota el tipo de evento y número de invitados, y le sugiere el surtido ideal de mini dulces, shot cups y torta principal con el presupuesto listo. Por ejemplo: "30 invitados" → 90 mini dulces surtidos + torta temática.` },
+  { n: "Inversiones Mafers", c: "Caracas", t: "Eventos", p: "584142288900", r: R.solicitud,
+    idea: "Cotizador de fiesta infantil",
+    d: `Es una página interactiva donde los padres seleccionan qué necesitan (torta temática, pasapalos, gelatinas y animación), la cantidad de niños y reciben la cotización exacta en segundos. Por ejemplo: fiesta de 20 niños → combo pasapalos + torta de personaje + gelatina decorada.` },
+  { n: "Minds Barbería", c: "Caracas", t: "Barbería", p: "584242229408", r: R.cita,
+    idea: "Trae a tus panas",
+    d: `Es una página de citas donde cada cliente tiene su link personal de referidos, y cuando un amigo agenda con ese link ustedes saben a quién darle el beneficio. Por ejemplo: Carlos trae 3 amigos → su próximo corte es gratis.` },
+  { n: "Jemma's Hair Salon", c: "Caracas", t: "Belleza", p: "584120197915", r: R.diseno,
+    idea: "Diseña tus uñas",
+    d: `Es una página con una mano en pantalla donde la clienta diseña sus uñas: elige color, acabado y decoración para cada uña, y agenda su cita con el diseño ya listo. Por ejemplo: semipermanente nude, francés en el anular con brillos, sábado 10am.` },
+  { n: "Velvet The Beauty House", c: "Caracas", t: "Belleza", p: "584142307498", r: R.solicitud,
+    idea: "Cotiza tu evento",
+    d: `Es una página donde la clienta elige su evento, la fecha, los servicios (maquillaje, peinado, uñas) y cuántas personas la acompañan, y recibe el presupuesto al instante. Por ejemplo: boda, novia + 4 damas, maquillaje y peinado → total calculado.` },
+  { n: "Salón Alfredo Alvarado", c: "Caracas", t: "Belleza", p: "584126397910", r: R.cita,
+    idea: "Prueba tu color de cabello",
+    d: `Es una página donde la clienta prueba tonos de cabello sobre una foto, indica el largo de su cabello y recibe el precio al instante antes de agendar. Por ejemplo: balayage miel, cabello largo → precio y cita para el viernes.` },
+  { n: "Grau", c: "Caracas", t: "Postres", p: "584241349021", r: R.pedido,
+    idea: "Arma tu caja de postres",
+    d: `Es una página donde el cliente elige una caja de 4, 6 o 9 y pone cada postre en su espacio, con tarjeta de regalo y fecha de entrega. Por ejemplo: caja de 6 → 2 quesillos, 2 brownies y 2 pie de limón, "Feliz cumpleaños mamá".` },
+  { n: "Quadro Café", c: "Caracas", t: "Café", p: "584242970595", r: R.pedido,
+    idea: "Arma tu bebida",
+    d: `Es una página donde el cliente arma su bebida viendo el vaso llenarse por capas (espresso, tipo de leche, sirope) y la pide para retirar al llegar. Por ejemplo: latte de pistacho con leche de avena, listo en 10 minutos.` },
+  { n: "Café 11", c: "Caracas", t: "Café", p: "584241833590", r: R.pedido,
+    idea: "Pedido para tu oficina",
+    d: `Es una página donde una persona arma el pedido de toda su oficina: anota cuántos son, cada uno elige lo suyo y el pedido sale ordenado por nombre con el total. Por ejemplo: "somos 6" → 4 capuchinos, 2 marrones y 6 croissants.` },
+  { n: "Café Franca", c: "Caracas", t: "Café", p: "584241855175", r: R.pedido,
+    idea: "¿Qué café eres?",
+    d: `Es una página con un quiz de 5 preguntas que le recomienda al cliente su bebida ideal y le genera una imagen para compartir en historias, con un botón para pedirla. Por ejemplo: "¿dulce o intenso?" → "Eres un cortado con caramelo".` },
+];
+
+const $ = id => document.getElementById(id);
+// v2 keys so old saved values from the previous version don't override the new defaults
+const K = { sent: "v2_sent", myName: "v3_myName", price: "v2_price", tpl: "v2_tpl" };
+const store = {
+  get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+
+let sent = store.get(K.sent, {});
+let filter = "all";
+
+$("myName").value = store.get(K.myName, DEFAULTS.myName);
+$("price").value = store.get(K.price, DEFAULTS.price);
+$("tpl").value = store.get(K.tpl, DEFAULT_TPL);
+["myName", "price", "tpl"].forEach(id =>
+  $(id).addEventListener("input", () => { store.set(K[id], $(id).value); render(); }));
+
+$("restoreTpl").addEventListener("click", () => {
+  $("tpl").value = DEFAULT_TPL;
+  store.set(K.tpl, DEFAULT_TPL);
+  render();
+});
+
+function message(b) {
+  return $("tpl").value
+    .replaceAll("{nombre}", $("myName").value.trim() || DEFAULTS.myName)
+    .replaceAll("{negocio}", b.n)
+    .replaceAll("{idea}", b.idea)
+    .replaceAll("{desc}", b.d)
+    .replaceAll("{resultado}", b.r)
+    .replaceAll("{precio}", $("price").value.trim() || "30")
+    .trim();
+}
+
+function render() {
+  const list = $("list");
+  list.innerHTML = "";
+  const items = BIZ.filter(b =>
+    filter === "all" ? true :
+    filter === "pending" ? !sent[b.p] :
+    b.c === filter);
+
+  items.forEach(b => {
+    const msg = message(b);
+    const url = `https://wa.me/${b.p}?text=${encodeURIComponent(msg)}`;
+    const card = document.createElement("div");
+    card.className = "card" + (sent[b.p] ? " sent" : "");
+    card.innerHTML = `
+      <div>
+        <div class="name"></div>
+        <div class="meta"><span class="tag">${b.c}</span><span class="tag">${b.t}</span>+${b.p}</div>
+        <div class="idea"></div>
+        <div class="preview"></div>
+      </div>
+      <div class="actions">
+        <a class="wa" href="${url}" target="_blank" rel="noopener">Abrir WhatsApp</a>
+        <button class="copy">Copiar mensaje</button>
+        <button class="toggle">Ver mensaje</button>
+        <label><input type="checkbox" ${sent[b.p] ? "checked" : ""}> Enviado</label>
+      </div>`;
+    card.querySelector(".name").textContent = b.n;
+    card.querySelector(".idea").textContent = `💡 ${b.idea} — ${b.d}`;
+    card.querySelector(".preview").textContent = msg;
+    card.querySelector(".wa").addEventListener("click", () => mark(b.p, true));
+    card.querySelector(".copy").addEventListener("click", e => {
+      navigator.clipboard.writeText(msg);
+      e.target.textContent = "¡Copiado!";
+      setTimeout(() => (e.target.textContent = "Copiar mensaje"), 1200);
+    });
+    card.querySelector(".toggle").addEventListener("click", () => card.classList.toggle("open"));
+    card.querySelector("input").addEventListener("change", e => mark(b.p, e.target.checked));
+    list.appendChild(card);
+  });
+
+  const done = BIZ.filter(b => sent[b.p]).length;
+  $("progress").textContent = `${done} / ${BIZ.length} enviados`;
+}
+
+function mark(phone, val) {
+  if (val) sent[phone] = Date.now(); else delete sent[phone];
+  store.set(K.sent, sent);
+  setTimeout(render, 300);
+}
+
+document.querySelectorAll(".bar button[data-f]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".bar button[data-f]").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    filter = btn.dataset.f;
+    render();
+  });
+});
+$("reset").addEventListener("click", () => {
+  if (confirm("¿Reiniciar todos los enviados?")) { sent = {}; store.set(K.sent, sent); render(); }
+});
+
+render();
+</script>
+</body>
+</html>

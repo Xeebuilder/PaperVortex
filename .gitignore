@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# WhatsApp credentials & session
+auth_info/
+*.session
+
+# System & OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
