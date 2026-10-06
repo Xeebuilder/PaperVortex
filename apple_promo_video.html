@@ -49,7 +49,7 @@
       opacity: 0;
       pointer-events: none;
       z-index: 50;
-      transition: opacity 0.08s ease-out;
+      transition: opacity 0.14s ease-out;
     }
 
     .flash-overlay.active {
@@ -57,16 +57,16 @@
       transition: none;
     }
 
-    /* Screen Shake */
+    /* Screen Shake for problem impact */
     .shake {
-      animation: screenShake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+      animation: screenShake 0.32s cubic-bezier(.36,.07,.19,.97) both;
     }
 
     @keyframes screenShake {
-      10%, 90% { transform: translate3d(-3px, 1px, 0) rotate(-0.5deg); }
-      20%, 80% { transform: translate3d(5px, -2px, 0) rotate(1deg); }
-      30%, 50%, 70% { transform: translate3d(-6px, 3px, 0) rotate(-1deg); }
-      40%, 60% { transform: translate3d(6px, -3px, 0) rotate(1deg); }
+      10%, 90% { transform: translate3d(-3px, 1px, 0); }
+      20%, 80% { transform: translate3d(5px, -2px, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 3px, 0); }
+      40%, 60% { transform: translate3d(6px, -3px, 0); }
     }
 
     /* Kinetic Text Box */
@@ -77,8 +77,8 @@
       line-height: 1.05;
       text-transform: uppercase;
       opacity: 0;
-      transform: scale(0.85) translateZ(-50px);
-      transition: opacity 0.1s cubic-bezier(0.16, 1, 0.3, 1), transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: scale(0.88) translateZ(-40px);
+      transition: opacity 0.09s cubic-bezier(0.16, 1, 0.3, 1), transform 0.11s cubic-bezier(0.16, 1, 0.3, 1);
       max-width: 1100px;
       z-index: 10;
       will-change: transform, opacity;
@@ -89,28 +89,35 @@
       transform: scale(1) translateZ(0);
     }
 
-    /* Mega Expand Effect for "CAMBIA ESO" */
+    /* Smooth Cinematic Zoom for "CAMBIA ESO" (Swallowing the entire screen into pure white/blue) */
     .text-box.mega-expand {
-      animation: violentZoom 0.9s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+      animation: smoothCinematicZoom 1.25s cubic-bezier(0.2, 0.9, 0.25, 1) forwards !important;
     }
 
-    @keyframes violentZoom {
+    @keyframes smoothCinematicZoom {
       0% {
         opacity: 1;
-        transform: scale(1) translateZ(0);
+        transform: scale(0.95) translateZ(0);
         filter: blur(0px);
-      }
-      40% {
-        opacity: 1;
-        transform: scale(2.8) translateZ(100px);
-        filter: blur(2px);
         color: #ff3b30;
+      }
+      45% {
+        opacity: 1;
+        transform: scale(3.5) translateZ(120px);
+        filter: blur(1px);
+        color: #ffffff;
+      }
+      80% {
+        opacity: 0.95;
+        transform: scale(18) translateZ(400px);
+        filter: blur(10px);
+        color: #2997ff;
       }
       100% {
         opacity: 0;
-        transform: scale(22) translateZ(500px);
-        filter: blur(20px);
-        color: #fff;
+        transform: scale(34) translateZ(800px);
+        filter: blur(28px);
+        color: #ffffff;
       }
     }
 
@@ -267,75 +274,76 @@
 
   <script>
     // ==========================================
-    // CINEMATIC STORYBOARD & TIMING
+    // CINEMATIC STORYBOARD & PACING
+    // (Act 1: Slow/Heavy Problem -> "WUUUUH" -> Act 2: Fast/Bouncing Solution)
     // ==========================================
     const storyES = [
-      // Act 1: The Late Night Scenario (Clock ticking / low tension)
-      { text: "11:42 PM.", dur: 900, type: "intro" },
-      { text: "UN COMPRADOR CALIFICADO...", dur: 1000, type: "beat" },
-      { text: "VE TU PROPIEDAD EN BRICKELL.", dur: 1100, type: "beat" },
-      { text: "TE ESCRIBE POR WHATSAPP:", dur: 950, type: "bubble", bubbleText: "«¿Cuánto pide de renta? ¿Cuántos cuartos?»" },
-      { text: "Y TÚ...", dur: 900, type: "beat" },
-      { text: "ESTÁS <span class='highlight-blue'>DURMIENDO.</span>", dur: 1100, type: "beat" },
-      { text: "O EN UNA CITA.", dur: 950, type: "comedic_prep" },
+      // Act 1: El Problema (Lento, tenso, relatable)
+      { text: "11:42 PM.", dur: 1100, type: "intro" },
+      { text: "UN COMPRADOR CALIFICADO...", dur: 1200, type: "beat_slow" },
+      { text: "VE TU PROPIEDAD EN BRICKELL.", dur: 1250, type: "beat_slow" },
+      { text: "TE ESCRIBE POR WHATSAPP:", dur: 1100, type: "bubble", bubbleText: "«¿Cuánto pide de renta? ¿Cuántos cuartos?»" },
+      { text: "Y TÚ...", dur: 1050, type: "beat_slow" },
+      { text: "ESTÁS <span class='highlight-blue'>DURMIENDO.</span>", dur: 1200, type: "beat_slow" },
+      { text: "O EN UNA CITA.", dur: 1100, type: "comedic_prep" },
 
-      // Act 2: COMIC RELIEF & RECORD SCRATCH (Beat stops dead!)
-      { text: "<span class='highlight-comedy'>👀 (Bueno... esperemos que sea buena cita 🥂)</span>", dur: 1800, type: "comedy_pause" },
-      { text: "PERO EL COMPRADOR...", dur: 950, type: "tension_slow" },
-      { text: "<span class='highlight-red'>NO ESPERA.</span>", dur: 950, type: "tension_slow" },
-      { text: "LE ESCRIBIÓ AL OTRO REALTOR.", dur: 1050, type: "tension_slow" },
-      { text: "Y PERDISTE <span class='highlight-red'>$15,000</span> EN COMISIÓN.", dur: 1200, type: "shake" },
+      // Gag Cómico & Freno en Seco
+      { text: "<span class='highlight-comedy'>👀 (Bueno... esperemos que sea buena cita 🥂)</span>", dur: 1950, type: "comedy_pause" },
+      { text: "PERO EL COMPRADOR...", dur: 1050, type: "tension_slow" },
+      { text: "<span class='highlight-red'>NO ESPERA.</span>", dur: 1000, type: "tension_slow" },
+      { text: "LE ESCRIBIÓ AL OTRO REALTOR.", dur: 1150, type: "tension_slow" },
+      { text: "Y PERDISTE <span class='highlight-red'>$15,000</span> EN COMISIÓN.", dur: 1350, type: "shake" },
 
-      // Act 3: VIOLENT MEGA EXPAND ("CAMBIA ESO" takes over screen)
-      { text: "<span class='highlight-red'>CAMBIA ESO.</span>", dur: 1150, type: "mega_expand" },
+      // Act 2: "CAMBIA ESO" - Expansión Gigante y Limpia con sonido WUUUUH (Sin temblor)
+      { text: "<span class='highlight-red'>CAMBIA ESO.</span>", dur: 1250, type: "mega_expand" },
 
-      // Act 4: Explosive 808 & Chords Drop - The Solution
-      { text: "ASISTENTE DE IA EN WHATSAPP.", dur: 1100, type: "drop_beat" },
-      { text: "CONECTADO A TU WEB <span class='highlight-gold'>EN 24 HORAS</span>.", dur: 1150, type: "beat_high" },
-      { text: "SABE SI ES <span class='highlight-gold'>VENTA O ALQUILER</span>.", dur: 1100, type: "beat_high" },
-      { text: "CUARTOS. METRAJE. PRECIOS. HOA.", dur: 1150, type: "beat_high" },
-      { text: "FILTRA EL PRESUPUESTO REAL.", dur: 1050, type: "beat_high" },
-      { text: "TE ENTREGA LA CITA <span class='highlight-green'>AGENDADA</span>.", dur: 1200, type: "beat_high" },
-      { text: "MIENTRAS DUERMES...", dur: 950, type: "beat" },
-      { text: "<span class='highlight-comedy'>😉 (O sigues en tu cita)</span>", dur: 1100, type: "comedy_wink" },
+      // Act 3: RITMO RÁPIDO & MOVIDO (¡La solución lo arregla todo!)
+      { text: "ASISTENTE DE IA EN WHATSAPP.", dur: 760, type: "fast_beat" },
+      { text: "CONECTADO A TU WEB <span class='highlight-gold'>EN 24 HORAS</span>.", dur: 780, type: "fast_beat" },
+      { text: "SABE SI ES <span class='highlight-gold'>VENTA O ALQUILER</span>.", dur: 760, type: "fast_beat" },
+      { text: "CUARTOS. METRAJE. PRECIOS. HOA.", dur: 800, type: "fast_beat" },
+      { text: "CALIFICA EL PRESUPUESTO REAL.", dur: 760, type: "fast_beat" },
+      { text: "TE ENTREGA LA CITA <span class='highlight-green'>AGENDADA</span>.", dur: 820, type: "fast_beat" },
+      { text: "MIENTRAS DUERMES...", dur: 740, type: "fast_beat" },
+      { text: "<span class='highlight-comedy'>😉 (O sigues en tu cita)</span>", dur: 950, type: "comedy_wink" },
 
-      // Act 5: Irresistible Offer & Outro
-      { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1400, type: "beat_final" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 2200, type: "outro_logo" }
+      // Outro
+      { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1100, type: "fast_final" },
+      { text: "PAPER VORTEX STUDIOS.", dur: 2500, type: "outro_logo" }
     ];
 
     const storyEN = [
-      { text: "11:42 PM.", dur: 900, type: "intro" },
-      { text: "A QUALIFIED LUXURY BUYER...", dur: 1000, type: "beat" },
-      { text: "SEES YOUR BRICKELL LISTING.", dur: 1100, type: "beat" },
-      { text: "MESSAGES YOUR WHATSAPP:", dur: 950, type: "bubble", bubbleText: "“How much is rent? How many bedrooms?”" },
-      { text: "AND YOU...", dur: 900, type: "beat" },
-      { text: "ARE SOUND <span class='highlight-blue'>ASLEEP.</span>", dur: 1100, type: "beat" },
-      { text: "OR ON A DATE.", dur: 950, type: "comedic_prep" },
+      { text: "11:42 PM.", dur: 1100, type: "intro" },
+      { text: "A QUALIFIED LUXURY BUYER...", dur: 1200, type: "beat_slow" },
+      { text: "SEES YOUR BRICKELL LISTING.", dur: 1250, type: "beat_slow" },
+      { text: "MESSAGES YOUR WHATSAPP:", dur: 1100, type: "bubble", bubbleText: "“How much is rent? How many bedrooms?”" },
+      { text: "AND YOU...", dur: 1050, type: "beat_slow" },
+      { text: "ARE SOUND <span class='highlight-blue'>ASLEEP.</span>", dur: 1200, type: "beat_slow" },
+      { text: "OR ON A DATE.", dur: 1100, type: "comedic_prep" },
 
-      // Act 2: COMIC RELIEF
-      { text: "<span class='highlight-comedy'>👀 (Hey... hope it's a good date 🥂)</span>", dur: 1800, type: "comedy_pause" },
-      { text: "BUT THE BUYER...", dur: 950, type: "tension_slow" },
-      { text: "<span class='highlight-red'>DOESN'T WAIT.</span>", dur: 950, type: "tension_slow" },
-      { text: "THEY MESSAGED ANOTHER AGENT.", dur: 1050, type: "tension_slow" },
-      { text: "AND YOU LOST A <span class='highlight-red'>$15,000</span> COMMISSION.", dur: 1200, type: "shake" },
+      // Comic Relief
+      { text: "<span class='highlight-comedy'>👀 (Hey... hope it's a good date 🥂)</span>", dur: 1950, type: "comedy_pause" },
+      { text: "BUT THE BUYER...", dur: 1050, type: "tension_slow" },
+      { text: "<span class='highlight-red'>DOESN'T WAIT.</span>", dur: 1000, type: "tension_slow" },
+      { text: "THEY MESSAGED ANOTHER AGENT.", dur: 1150, type: "tension_slow" },
+      { text: "AND YOU LOST A <span class='highlight-red'>$15,000</span> COMMISSION.", dur: 1350, type: "shake" },
 
-      // Act 3: VIOLENT MEGA EXPAND
-      { text: "<span class='highlight-red'>CHANGE THAT.</span>", dur: 1150, type: "mega_expand" },
+      // "CHANGE THAT"
+      { text: "<span class='highlight-red'>CHANGE THAT.</span>", dur: 1250, type: "mega_expand" },
 
-      // Act 4: Explosive Drop
-      { text: "24/7 AI AGENT ON WHATSAPP.", dur: 1100, type: "drop_beat" },
-      { text: "CONNECTED TO YOUR WEBSITE <span class='highlight-gold'>IN 24H</span>.", dur: 1150, type: "beat_high" },
-      { text: "KNOWS <span class='highlight-gold'>SALE OR RENT</span>.", dur: 1100, type: "beat_high" },
-      { text: "BEDROOMS. SQUARE FOOTAGE. HOA.", dur: 1150, type: "beat_high" },
-      { text: "QUALIFIES REAL BUYER FUNDS.", dur: 1050, type: "beat_high" },
-      { text: "HANDS YOU THE <span class='highlight-green'>BOOKED TOUR</span>.", dur: 1200, type: "beat_high" },
-      { text: "WHILE YOU SLEEP...", dur: 950, type: "beat" },
-      { text: "<span class='highlight-comedy'>😉 (Or stay on your date)</span>", dur: 1100, type: "comedy_wink" },
+      // Fast Driving Groove
+      { text: "24/7 AI AGENT ON WHATSAPP.", dur: 760, type: "fast_beat" },
+      { text: "CONNECTED TO YOUR WEBSITE <span class='highlight-gold'>IN 24H</span>.", dur: 780, type: "fast_beat" },
+      { text: "KNOWS <span class='highlight-gold'>SALE OR RENT</span>.", dur: 760, type: "fast_beat" },
+      { text: "BEDROOMS. SQUARE FOOTAGE. HOA.", dur: 800, type: "fast_beat" },
+      { text: "QUALIFIES REAL BUYER FUNDS.", dur: 760, type: "fast_beat" },
+      { text: "HANDS YOU THE <span class='highlight-green'>BOOKED TOUR</span>.", dur: 820, type: "fast_beat" },
+      { text: "WHILE YOU SLEEP...", dur: 740, type: "fast_beat" },
+      { text: "<span class='highlight-comedy'>😉 (Or stay on your date)</span>", dur: 950, type: "comedy_wink" },
 
-      // Act 5: Outro
-      { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1400, type: "beat_final" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 2200, type: "outro_logo" }
+      // Outro
+      { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1100, type: "fast_final" },
+      { text: "PAPER VORTEX STUDIOS.", dur: 2500, type: "outro_logo" }
     ];
 
     let currentStory = storyES;
@@ -348,17 +356,16 @@
     let noiseBuffer = null;
 
     // ==========================================
-    // AUDIO ENGINE: 808, SYNTH, PIANO & FX
+    // AUDIO ENGINE: 808, SYNTH, PIANO, WUUUUH & RAPID GROOVE
     // ==========================================
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // Master Limiter / Compressor
         const comp = audioCtx.createDynamicsCompressor();
         comp.threshold.setValueAtTime(-14, audioCtx.currentTime);
         comp.knee.setValueAtTime(20, audioCtx.currentTime);
-        comp.ratio.setValueAtTime(10, audioCtx.currentTime);
+        comp.ratio.setValueAtTime(12, audioCtx.currentTime);
         comp.attack.setValueAtTime(0.002, audioCtx.currentTime);
         comp.release.setValueAtTime(0.2, audioCtx.currentTime);
 
@@ -368,8 +375,7 @@
         masterGain.connect(comp);
         comp.connect(audioCtx.destination);
 
-        // Noise buffer
-        const len = audioCtx.sampleRate * 1;
+        const len = audioCtx.sampleRate * 2;
         noiseBuffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
         const data = noiseBuffer.getChannelData(0);
         for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
@@ -387,11 +393,11 @@
       const gain = audioCtx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(160, t);
-      osc.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      osc.frequency.setValueAtTime(165, t);
+      osc.frequency.exponentialRampToValueAtTime(44, t + 0.12);
       osc.frequency.exponentialRampToValueAtTime(32, t + 0.45);
 
-      gain.gain.setValueAtTime(0.9 * intensity, t);
+      gain.gain.setValueAtTime(0.95 * intensity, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
 
       osc.connect(gain);
@@ -400,7 +406,7 @@
       osc.stop(t + 0.5);
     }
 
-    // Crisp Tech Clap/Snare
+    // Crisp Tech Clap
     function playClap() {
       if (!audioEnabled || !audioCtx || !noiseBuffer) return;
       const t = audioCtx.currentTime;
@@ -408,11 +414,11 @@
       noise.buffer = noiseBuffer;
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1600, t);
+      filter.frequency.setValueAtTime(1700, t);
       filter.Q.setValueAtTime(2, t);
 
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.setValueAtTime(0.55, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
 
       noise.connect(filter);
@@ -422,8 +428,31 @@
       noise.stop(t + 0.19);
     }
 
-    // Modern Synth / Electric Piano Chords
-    function playSynthChord(chordFreqs, duration = 0.6) {
+    // Rapid Double Hi-Hats (Muestra el ritmo rápido y movido)
+    function playRapidHats() {
+      if (!audioEnabled || !audioCtx || !noiseBuffer) return;
+      const t = audioCtx.currentTime;
+      [0, 0.08, 0.16, 0.24].forEach((offset, i) => {
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(8000, t + offset);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(i % 2 === 0 ? 0.35 : 0.2, t + offset);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.045);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        noise.start(t + offset);
+        noise.stop(t + offset + 0.05);
+      });
+    }
+
+    // Synth / Electric Piano Chords
+    function playSynthChord(chordFreqs, duration = 0.5) {
       if (!audioEnabled || !audioCtx) return;
       const t = audioCtx.currentTime;
       chordFreqs.forEach(freq => {
@@ -435,9 +464,9 @@
         osc.frequency.setValueAtTime(freq, t);
 
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1800, t);
-        filter.frequency.exponentialRampToValueAtTime(350, t + duration);
-        filter.Q.setValueAtTime(3, t);
+        filter.frequency.setValueAtTime(1900, t);
+        filter.frequency.exponentialRampToValueAtTime(320, t + duration);
+        filter.Q.setValueAtTime(2.5, t);
 
         gain.gain.setValueAtTime(0.18, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
@@ -451,21 +480,20 @@
       });
     }
 
-    // Record Scratch / Sudden Brake (Comedy release)
+    // Comic Vinyl Scratch (Frena el beat en seco)
     function playRecordScratch() {
       if (!audioEnabled || !audioCtx || !noiseBuffer) return;
       const t = audioCtx.currentTime;
 
-      // Scratch noise
       const noise = audioCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(3200, t);
-      filter.frequency.exponentialRampToValueAtTime(200, t + 0.28);
+      filter.frequency.exponentialRampToValueAtTime(180, t + 0.28);
 
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.6, t);
+      gain.gain.setValueAtTime(0.65, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
 
       noise.connect(filter);
@@ -474,13 +502,12 @@
       noise.start(t);
       noise.stop(t + 0.31);
 
-      // Pitch wobble
       const osc = audioCtx.createOscillator();
       const oscGain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(500, t);
-      osc.frequency.exponentialRampToValueAtTime(60, t + 0.28);
-      oscGain.gain.setValueAtTime(0.4, t);
+      osc.frequency.setValueAtTime(520, t);
+      osc.frequency.exponentialRampToValueAtTime(50, t + 0.28);
+      oscGain.gain.setValueAtTime(0.45, t);
       oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.29);
       osc.connect(oscGain);
       oscGain.connect(masterGain);
@@ -488,7 +515,7 @@
       osc.stop(t + 0.3);
     }
 
-    // Comedic Elevator / Comedy Bell Chime (Ding!)
+    // Comedic Elevator Chime (Ding!)
     function playComedyChime() {
       if (!audioEnabled || !audioCtx) return;
       const t = audioCtx.currentTime;
@@ -509,47 +536,59 @@
       });
     }
 
-    // Massive Explosion Boom for "CAMBIA ESO"
-    function playMegaImpact() {
+    // EL SONIDO "WUUUUH" (Cinematic Riser Whoosh + Deep Sub Drop)
+    function playWhooshRiser() {
       if (!audioEnabled || !audioCtx || !noiseBuffer) return;
       const t = audioCtx.currentTime;
 
-      // Heavy 808 Sub Drop
-      play808(1.5);
-
-      // White noise explosion burst
+      // 1. Noise Whoosh Riser ("WUUU...")
       const noise = audioCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = audioCtx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(8000, t);
-      filter.frequency.exponentialRampToValueAtTime(150, t + 0.7);
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(140, t);
+      filter.frequency.exponentialRampToValueAtTime(3600, t + 0.7);
+      filter.frequency.exponentialRampToValueAtTime(80, t + 1.25);
+      filter.Q.setValueAtTime(3.8, t);
 
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.7, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+      gain.gain.setValueAtTime(0.02, t);
+      gain.gain.linearRampToValueAtTime(0.85, t + 0.7);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.3);
 
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(masterGain);
       noise.start(t);
-      noise.stop(t + 0.85);
+      noise.stop(t + 1.35);
+
+      // 2. Cinematic Sub-Bass Swell ("...UUUUH!")
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(55, t);
+      osc.frequency.linearRampToValueAtTime(240, t + 0.7);
+      osc.frequency.exponentialRampToValueAtTime(35, t + 1.25);
+
+      oscGain.gain.setValueAtTime(0.02, t);
+      oscGain.gain.linearRampToValueAtTime(0.9, t + 0.7);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 1.3);
+
+      osc.connect(oscGain);
+      oscGain.connect(masterGain);
+      osc.start(t);
+      osc.stop(t + 1.35);
     }
 
-    // Grand Finale Cinema Chords
+    // Grand Finale Pad
     function playOutroPad() {
       if (!audioEnabled || !audioCtx) return;
-      // Lush F minor 9th (F3, Ab3, C4, Eb4, G4)
-      playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], 1.8);
+      playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], 2.0);
     }
 
-    // ==========================================
-    // FRAME ORCHESTRATION & ANIMATIONS
-    // ==========================================
-    const chordFm = [174.61, 207.65, 261.63]; // F minor
-    const chordDb = [138.59, 174.61, 207.65]; // Db Major
-    const chordBbm = [116.54, 138.59, 174.61]; // Bb minor
-    const chordC = [130.81, 164.81, 196.00];   // C dominant
+    const chordFm = [174.61, 207.65, 261.63];
+    const chordDb = [138.59, 174.61, 207.65];
+    const chordBbm = [116.54, 138.59, 174.61];
 
     function nextFrame() {
       if (step >= currentStory.length) {
@@ -574,23 +613,21 @@
         textBox.innerHTML = frame.text;
         textBox.classList.add('active');
 
-        // Progress bar
         const pct = ((step + 1) / currentStory.length) * 100;
         progressBar.style.width = pct + '%';
 
-        // TYPE-SPECIFIC ACTIONS & SOUNDS
         switch (frame.type) {
           case 'intro':
-            playSynthChord(chordFm, 0.8);
+            playSynthChord(chordFm, 0.9);
             break;
 
-          case 'beat':
-            play808(0.9);
-            playSynthChord(chordFm, 0.4);
+          case 'beat_slow':
+            play808(0.85);
+            playSynthChord(chordFm, 0.45);
             break;
 
           case 'bubble':
-            play808(0.8);
+            play808(0.75);
             waBubble.innerText = frame.bubbleText;
             waBubble.style.display = 'inline-block';
             break;
@@ -600,59 +637,54 @@
             break;
 
           case 'comedy_pause':
-            // RECORD SCRATCH + COMIC CHIME + BEAT CUTS OFF!
             playRecordScratch();
-            setTimeout(playComedyChime, 240);
+            setTimeout(playComedyChime, 250);
             break;
 
           case 'tension_slow':
-            // Low tense notes, no drums
-            playSynthChord(chordBbm, 0.7);
+            playSynthChord(chordBbm, 0.8);
             break;
 
           case 'shake':
             stage.classList.add('shake');
-            play808(1.2);
+            play808(1.3);
             playClap();
             break;
 
           case 'mega_expand':
-            // VIOLENT SCREEN EXPANSION & EXPLOSION!
+            // "CAMBIA ESO": Zoom suave y expansivo sin temblores + Sonido WUUUUH
             textBox.classList.add('mega-expand');
-            flashOverlay.classList.add('active');
-            stage.classList.add('shake');
-            playMegaImpact();
+            playWhooshRiser();
             setTimeout(() => {
-              flashOverlay.classList.remove('active');
-            }, 80);
+              flashOverlay.classList.add('active');
+              setTimeout(() => flashOverlay.classList.remove('active'), 120);
+            }, 700);
             break;
 
-          case 'drop_beat':
-            play808(1.4);
+          case 'fast_beat':
+            // ¡RITMO RÁPIDO Y MOVIDO!
+            play808(1.2);
             playClap();
-            playSynthChord(chordFm, 0.9);
-            break;
-
-          case 'beat_high':
-            play808(1.1);
-            playClap();
-            playSynthChord(step % 2 === 0 ? chordDb : chordBbm, 0.5);
+            playRapidHats();
+            playSynthChord(step % 2 === 0 ? chordDb : chordFm, 0.4);
             break;
 
           case 'comedy_wink':
             playComedyChime();
+            play808(1.0);
             break;
 
-          case 'beat_final':
-            play808(1.3);
+          case 'fast_final':
+            play808(1.4);
             playClap();
-            playSynthChord(chordDb, 1.0);
+            playRapidHats();
+            playSynthChord(chordDb, 0.9);
             break;
 
           case 'outro_logo':
             logoOutro.style.display = 'block';
             textBox.style.fontSize = 'clamp(24px, 4.5vw, 52px)';
-            play808(1.2);
+            play808(1.3);
             playOutroPad();
             break;
         }
@@ -661,7 +693,7 @@
         if (isPlaying) {
           timer = setTimeout(nextFrame, frame.dur);
         }
-      }, 60);
+      }, 50);
     }
 
     function togglePlay() {
@@ -705,7 +737,6 @@
       }
     }
 
-    // Auto-start on click
     window.addEventListener('click', () => {
       if (!isPlaying && step === 0) {
         togglePlay();
