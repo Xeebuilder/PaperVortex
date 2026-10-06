@@ -1,13 +1,13 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { execSync, spawn } = require('child_process');
+const { execSync } = require('child_process');
 const puppeteer = require('puppeteer');
 
 const PROJECT_DIR = __dirname;
 const PORT = 9988;
 
-// Helper: static file server
+// Static file server
 function createServer() {
   return http.createServer((req, res) => {
     let reqPath = req.url.split('?')[0];
@@ -35,19 +35,14 @@ function createServer() {
   });
 }
 
-// Generate Pristine 48kHz WAV Audio
-async function generateAudio(outputPath, lang = 'es') {
-  console.log(`[Audio] Generating studio audio for lang=${lang}...`);
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+// Synthesize Studio-Quality Audio from Recorded Animation Events
+async function renderAudioFromEvents(browser, events, totalDuration, outputPath) {
+  console.log(`[Audio] Synthesizing audio from ${events.length} synchronized events (ad duration: ${totalDuration.toFixed(2)}s)...`);
   const page = await browser.newPage();
   
-  const wavBase64 = await page.evaluate(async (lang) => {
+  const wavBase64 = await page.evaluate(async (events, totalDuration) => {
     const sampleRate = 48000;
-    const totalDuration = 29.5;
-    const offlineCtx = new OfflineAudioContext(2, Math.ceil(sampleRate * totalDuration), sampleRate);
+    const offlineCtx = new OfflineAudioContext(2, Math.ceil(sampleRate * (totalDuration + 0.8)), sampleRate);
     
     // Compressor
     const comp = offlineCtx.createDynamicsCompressor();
@@ -70,6 +65,7 @@ async function generateAudio(outputPath, lang = 'es') {
     for (let i = 0; i < noiseLen; i++) noiseData[i] = Math.random() * 2 - 1;
     
     function play808(t, intensity = 1.0) {
+      if (t < 0) t = 0;
       const osc = offlineCtx.createOscillator();
       const gain = offlineCtx.createGain();
       osc.type = 'sine';
@@ -85,6 +81,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playClap(t) {
+      if (t < 0) t = 0;
       const noise = offlineCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = offlineCtx.createBiquadFilter();
@@ -102,6 +99,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playSingleHat(t, accented = false) {
+      if (t < 0) t = 0;
       const noise = offlineCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = offlineCtx.createBiquadFilter();
@@ -118,6 +116,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playOpenHat(t) {
+      if (t < 0) t = 0;
       const noise = offlineCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = offlineCtx.createBiquadFilter();
@@ -134,6 +133,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playBassTone(t, freq) {
+      if (t < 0) t = 0;
       const osc = offlineCtx.createOscillator();
       const filter = offlineCtx.createBiquadFilter();
       const gain = offlineCtx.createGain();
@@ -153,6 +153,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playSynthChord(t, chordFreqs, duration = 0.5) {
+      if (t < 0) t = 0;
       chordFreqs.forEach(freq => {
         const osc = offlineCtx.createOscillator();
         const filter = offlineCtx.createBiquadFilter();
@@ -174,6 +175,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playRecordScratch(t) {
+      if (t < 0) t = 0;
       const noise = offlineCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = offlineCtx.createBiquadFilter();
@@ -203,6 +205,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playComedyChime(t) {
+      if (t < 0) t = 0;
       const notes = [1046.5, 1318.5, 1567.98];
       notes.forEach((freq, idx) => {
         const osc = offlineCtx.createOscillator();
@@ -219,6 +222,7 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playWhooshRiser(t) {
+      if (t < 0) t = 0;
       const noise = offlineCtx.createBufferSource();
       noise.buffer = noiseBuffer;
       const filter = offlineCtx.createBiquadFilter();
@@ -253,61 +257,53 @@ async function generateAudio(outputPath, lang = 'es') {
     }
     
     function playOutroPad(t) {
+      if (t < 0) t = 0;
       playSynthChord(t, [174.61, 207.65, 261.63, 311.13, 392.0], 2.2);
     }
     
-    const chordFm = [174.61, 207.65, 261.63];
-    const chordDb = [138.59, 174.61, 207.65];
-    const chordBbm = [116.54, 138.59, 174.61];
-    const bassRhythm = [
-      43.65, 0, 43.65, 0,
-      51.91, 0, 43.65, 58.27,
-      43.65, 0, 43.65, 0,
-      65.41, 0, 58.27, 51.91
-    ];
-    
-    // Act 1: El Problema
-    playSynthChord(0.000, chordFm, 0.9);
-    play808(1.100, 0.85); playSynthChord(1.100, chordFm, 0.45);
-    play808(2.300, 0.85); playSynthChord(2.300, chordFm, 0.45);
-    play808(3.500, 0.75);
-    play808(4.600, 0.85); playSynthChord(4.600, chordFm, 0.45);
-    play808(5.650, 0.85); playSynthChord(5.650, chordFm, 0.45);
-    playSynthChord(6.850, chordDb, 0.5);
-    playRecordScratch(7.950); playComedyChime(7.950 + 0.250);
-    playSynthChord(9.900, chordBbm, 0.8);
-    playSynthChord(11.000, chordBbm, 0.8);
-    playSynthChord(12.100, chordBbm, 0.8);
-    playSynthChord(13.250, chordBbm, 0.8);
-    playWhooshRiser(14.550);
-    
-    // Act 2: Beat Synchronizer (100 BPM = 150ms step)
-    const beatStart = 15.800;
-    const stepMs = 0.150;
-    for (let rStep = 0; rStep < 72; rStep++) {
-      const t = beatStart + rStep * stepMs;
-      const s = rStep % 16;
-      if (rStep === 56) playComedyChime(t); // Joke wink
-      if (s === 0 || s === 8) play808(t, 1.0);
-      else if (s === 10) play808(t, 0.65);
-      if (s === 4 || s === 12) playClap(t);
-      playSingleHat(t, s % 2 === 0);
-      if (s === 6 || s === 14) playOpenHat(t);
-      const note = bassRhythm[s];
-      if (note > 0) playBassTone(t, note);
-      if (s === 0 || s === 8) playSynthChord(t, s === 0 ? chordFm : chordDb, 0.42);
+    // Schedule all captured events
+    for (const evt of events) {
+      const t = evt.t;
+      switch (evt.fn) {
+        case '808':
+          play808(t, evt.intensity);
+          break;
+        case 'clap':
+          playClap(t);
+          break;
+        case 'hat':
+          playSingleHat(t, evt.accented);
+          break;
+        case 'openHat':
+          playOpenHat(t);
+          break;
+        case 'bass':
+          playBassTone(t, evt.freq);
+          break;
+        case 'chord':
+          playSynthChord(t, evt.chord, evt.dur);
+          break;
+        case 'scratch':
+          playRecordScratch(t);
+          break;
+        case 'chime':
+          playComedyChime(t);
+          break;
+        case 'whoosh':
+          playWhooshRiser(t);
+          break;
+        case 'outroPad':
+          playOutroPad(t);
+          break;
+      }
     }
-    
-    // Outro Pad + Sub Drop
-    const outroTime = beatStart + 72 * stepMs;
-    play808(outroTime, 1.4);
-    playOutroPad(outroTime);
     
     const rendered = await offlineCtx.startRendering();
     const length = rendered.length;
     const ch0 = rendered.getChannelData(0);
     const ch1 = rendered.getChannelData(1);
     
+    // 16-bit WAV PCM encoding
     const buffer = new ArrayBuffer(44 + length * 4);
     const view = new DataView(buffer);
     function writeStr(offset, str) {
@@ -343,27 +339,22 @@ async function generateAudio(outputPath, lang = 'es') {
       binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
     }
     return btoa(binary);
-  }, lang);
+  }, events, totalDuration);
   
-  await browser.close();
+  await page.close();
   fs.writeFileSync(outputPath, Buffer.from(wavBase64, 'base64'));
   console.log(`[Audio] Audio rendered to ${outputPath} (${(fs.statSync(outputPath).size / 1024 / 1024).toFixed(2)} MB)`);
 }
 
-// Record video frames and encode to MP4
+// Record video frames and encode to MP4 with Frame-Perfect Lock
 async function exportVideo({ width, height, outputFilename, isVertical = false }) {
   console.log(`\n========================================`);
-  console.log(`[Video] Exporting ${outputFilename} (${width}x${height})...`);
+  console.log(`[Video] Recording & Exporting ${outputFilename} (${width}x${height})...`);
   console.log(`========================================`);
   
   const tempDir = path.join('/tmp', `promo_frames_${width}x${height}`);
   if (fs.existsSync(tempDir)) fs.rmSync(tempDir, { recursive: true, force: true });
   fs.mkdirSync(tempDir, { recursive: true });
-  
-  const audioPath = path.join('/tmp', 'apple_promo_audio.wav');
-  if (!fs.existsSync(audioPath)) {
-    await generateAudio(audioPath, 'es');
-  }
 
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -380,7 +371,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
   await page.setViewport({ width, height, deviceScaleFactor: 1 });
   await page.goto(`http://localhost:${PORT}/apple_promo_video.html`, { waitUntil: 'networkidle0' });
   
-  // Prepare page layout for clean export
+  // Set up instrumentation and layout
   await page.evaluate((isVertical) => {
     // Hide UI controls
     const controls = document.querySelector('.controls');
@@ -426,65 +417,162 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
       requestAnimationFrame(pulse);
     }
     requestAnimationFrame(pulse);
+
+    // ==========================================
+    // AUDIO EVENT CAPTURE INSTRUMENTATION
+    // ==========================================
+    window.audioEnabled = true;
+    window.audioCtx = { currentTime: 0, state: 'running', resume: () => {} };
+
+    window.__audioEvents = [];
+    window.__slide0Painted = false;
+    window.__startTime = 0;
+    window.__isComplete = false;
+
+    function recordEvt(fn, params = {}) {
+      if (!window.__isComplete) {
+        // If slide 0 hasn't painted yet, this event belongs to t=0.000 (intro chord)
+        const AUDIO_CALIBRATION_OFFSET = 0.085;
+        const t = Math.max(0, ((performance.now() - window.__startTime) / 1000) + AUDIO_CALIBRATION_OFFSET);
+        window.__audioEvents.push({ fn, ...params, t });
+      }
+    }
+
+    window.play808 = function(intensity = 1.0) {
+      recordEvt('808', { intensity });
+    };
+
+    window.playClap = function() {
+      recordEvt('clap');
+    };
+
+    window.playSingleHat = function(t, accented) {
+      recordEvt('hat', { accented });
+    };
+
+    window.playOpenHat = function() {
+      recordEvt('openHat');
+    };
+
+    window.playBassTone = function(t, freq) {
+      recordEvt('bass', { freq });
+    };
+
+    window.playSynthChord = function(chord, dur = 0.5) {
+      recordEvt('chord', { chord, dur });
+    };
+
+    window.playRecordScratch = function() {
+      recordEvt('scratch');
+    };
+
+    window.playComedyChime = function() {
+      recordEvt('chime');
+    };
+
+    window.playWhooshRiser = function() {
+      recordEvt('whoosh');
+    };
+
+    window.playOutroPad = function() {
+      recordEvt('outroPad');
+    };
+
+    // Intercept nextFrame: start timer once Slide 0 actually paints
+    const origNextFrame = window.nextFrame;
+    window.nextFrame = function() {
+      origNextFrame();
+      if (!window.__slide0Painted) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.__slide0Painted = true;
+            window.__startTime = performance.now();
+          });
+        });
+      }
+    };
   }, isVertical);
 
   // Set up CDP screencast
   const client = await page.target().createCDPSession();
   const frames = [];
   let frameIndex = 0;
+  let firstFrameTimestamp = null;
   
   client.on('Page.screencastFrame', async ({ sessionId, data, metadata }) => {
+    // Only capture frames AFTER Slide 0 is painted on screen
+    const isPainted = await page.evaluate(() => window.__slide0Painted);
+    if (!isPainted) {
+      try {
+        await client.send('Page.screencastFrameAck', { sessionId });
+      } catch (e) {}
+      return;
+    }
+
+    if (firstFrameTimestamp === null) {
+      firstFrameTimestamp = metadata.timestamp;
+    }
+
+    const relTime = metadata.timestamp - firstFrameTimestamp;
     const filename = `frame_${String(frameIndex++).padStart(6, '0')}.jpg`;
     const filepath = path.join(tempDir, filename);
     fs.writeFileSync(filepath, Buffer.from(data, 'base64'));
     frames.push({
       path: filepath,
-      timestamp: metadata.timestamp
+      relTime: relTime
     });
+
     try {
       await client.send('Page.screencastFrameAck', { sessionId });
     } catch (e) {}
   });
 
-  console.log(`[Recording] Starting screencast at ${width}x${height}...`);
+  console.log(`[Recording] Starting screencast session at ${width}x${height}...`);
   await client.send('Page.startScreencast', { format: 'jpeg', quality: 92, everyNthFrame: 1 });
   
-  // Start the animated ad playback
+  // Trigger playback
   await page.evaluate(() => {
-    // Disable in-page audio processing to keep CPU 100% focused on 60fps visuals
-    audioEnabled = false;
     togglePlay();
   });
 
-  const recordingDurationSec = 29.5;
+  const expectedDurationSec = 29.5;
   const startWallClock = Date.now();
   
-  // Wait until the promo finishes its full story
-  while ((Date.now() - startWallClock) / 1000 < recordingDurationSec) {
+  while ((Date.now() - startWallClock) / 1000 < expectedDurationSec) {
     await new Promise(r => setTimeout(r, 200));
   }
   
   await client.send('Page.stopScreencast');
+  
+  // Extract audio events recorded directly from animation triggers
+  const recordedAudioEvents = await page.evaluate(() => {
+    window.__isComplete = true;
+    return window.__audioEvents;
+  });
+
+  console.log(`[Recording] Captured ${frames.length} video frames and ${recordedAudioEvents.length} audio events.`);
+  
+  // Render pristine audio matching the EXACT recorded timestamps
+  const audioPath = path.join(tempDir, 'audio_synced.wav');
+  await renderAudioFromEvents(browser, recordedAudioEvents, expectedDurationSec, audioPath);
+  
   await browser.close();
   
-  console.log(`[Recording] Captured ${frames.length} frames (${(frames.length / recordingDurationSec).toFixed(1)} fps avg)`);
-  
-  // Generate ffconcat demuxer file with precise timestamps
+  // Generate ffconcat demuxer file with relative durations
   const concatPath = path.join(tempDir, 'concat.txt');
   let concatContent = 'ffconcat version 1.0\n';
   
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
-    let duration = 0.016667; // fallback ~60fps
+    let duration = 0.016667;
     if (i < frames.length - 1) {
-      const delta = frames[i + 1].timestamp - f.timestamp;
-      if (delta > 0 && delta < 1.0) {
+      const delta = frames[i + 1].relTime - f.relTime;
+      if (delta > 0 && delta < 0.5) {
         duration = delta;
       }
     }
     concatContent += `file '${f.path}'\nduration ${duration.toFixed(6)}\n`;
   }
-  // Repeat last frame for demuxer requirement
   if (frames.length > 0) {
     concatContent += `file '${frames[frames.length - 1].path}'\n`;
   }
@@ -492,7 +580,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
 
   // Encode with FFmpeg
   const targetOutput = path.join(PROJECT_DIR, outputFilename);
-  console.log(`[FFmpeg] Encoding high-profile MP4 -> ${targetOutput}...`);
+  console.log(`[FFmpeg] Encoding frame-perfect MP4 -> ${targetOutput}...`);
   
   const ffmpegCmd = [
     'ffmpeg', '-y',
@@ -516,7 +604,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
 
   execSync(ffmpegCmd, { stdio: 'inherit' });
 
-  // Clean temporary frames
+  // Clean temporary frames and audio
   fs.rmSync(tempDir, { recursive: true, force: true });
   
   const stat = fs.statSync(targetOutput);
@@ -545,7 +633,7 @@ async function main() {
       isVertical: true
     });
 
-    console.log('All exports completed successfully!');
+    console.log('All exports completed successfully with frame-perfect audio sync!');
   } finally {
     server.close();
   }
