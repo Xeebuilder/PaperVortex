@@ -519,6 +519,72 @@
       }
     }
 
+    /* Replay Overlay at Video End */
+    .promo-replay-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 60;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .promo-replay-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .btn-replay {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 255, 255, 0.25);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .btn-replay:hover {
+      background: #ffffff;
+      transform: scale(1.06);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), 0 0 60px rgba(255, 255, 255, 0.45);
+    }
+
+    .btn-replay:active {
+      transform: scale(0.96);
+    }
+
+    .btn-replay svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) {
+      .btn-replay {
+        padding: 12px 22px;
+        font-size: 15px;
+      }
+    }
+
     /* Social Proof Bar */
     .social-proof {
       padding: 30px 0 70px;
@@ -1091,15 +1157,24 @@
           <div class="flash-overlay" id="flashOverlay"></div>
           
           <div class="promo-stage" id="promoStage" style="cursor: pointer;" title="Toca para activar/silenciar sonido">
-            <!-- Small Mute Button on Top of Video -->
-            <button class="promo-mute-btn" id="promoMuteBtn" onclick="toggleAudio(event)" title="Activar / Silenciar sonido" aria-label="Mute / Unmute">
+            <!-- Small Mute Button on Top of Video (Sound ON by default) -->
+            <button class="promo-mute-btn is-active" id="promoMuteBtn" onclick="toggleAudio(event)" title="Silenciar / Activar sonido" aria-label="Mute / Unmute">
               <svg id="muteIcon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <line x1="23" y1="9" x2="17" y2="15"></line>
-                <line x1="17" y1="9" x2="23" y2="15"></line>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
               </svg>
-              <span class="promo-mute-text" id="promoMuteText">Activar Sonido</span>
+              <span class="promo-mute-text" id="promoMuteText">Silenciar</span>
             </button>
+
+            <!-- Replay Overlay at end of video -->
+            <div class="promo-replay-overlay" id="promoReplayOverlay">
+              <button class="btn-replay" id="promoReplayBtn" onclick="replayPromo(event)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/>
+                </svg>
+                <span>Volver a ver</span>
+              </button>
+            </div>
 
             <div class="promo-progress" id="promoProgress"></div>
             <div id="promoLogoWrap" class="promo-logo-wrap">
@@ -1567,8 +1642,10 @@
     let currentStory = storyES;
     let step = 0;
     let isPlaying = true;
-    let audioEnabled = false;
+    let audioEnabled = true;
     let timer = null;
+    let outroTextTimer = null;
+    let outroLogoTimer = null;
     let audioCtx = null;
     let masterGain = null;
     let noiseBuffer = null;
@@ -1957,23 +2034,24 @@
       playOutroPad(3.0);
 
       // 1. A los 1.4s, las letras se desvanecen en 0.4s (desaparecen a los 1.8s)
-      setTimeout(() => {
+      outroTextTimer = setTimeout(() => {
         if (isPlaying) {
           textBox.classList.add('fade-out');
         }
       }, 1400);
 
       // 2. Exactamente 0.5s después de que desaparecen las letras (1.8s + 0.5s = 2.3s), el vortex se desvanece en 0.6s
-      setTimeout(() => {
+      outroLogoTimer = setTimeout(() => {
         if (isPlaying) {
           logoWrap.classList.add('fade-out');
         }
       }, 2300);
 
+      // 3. Al terminar el outro, el video TERMINA y no se repite solo: muestra la opción "Volver a ver"
       timer = setTimeout(() => {
         if (isPlaying) {
-          step = 0;
-          nextFrame();
+          isPlaying = false;
+          showReplayOverlay();
         }
       }, frame.dur);
     }
@@ -2073,60 +2151,105 @@
       }
     }
 
-    function toggleAudio(e) {
-      if (e) e.stopPropagation();
-      audioEnabled = !audioEnabled;
+    function updateMuteButtonUI() {
       const muteBtn = document.getElementById('promoMuteBtn');
       const muteText = document.getElementById('promoMuteText');
       const muteIcon = document.getElementById('muteIcon');
+      if (!muteBtn || !muteText || !muteIcon) return;
 
+      if (audioEnabled) {
+        muteBtn.classList.add('is-active');
+        muteText.innerText = "Silenciar";
+        muteIcon.innerHTML = `
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        `;
+      } else {
+        muteBtn.classList.remove('is-active');
+        muteText.innerText = "Activar Sonido";
+        muteIcon.innerHTML = `
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        `;
+      }
+    }
+
+    function toggleAudio(e) {
+      if (e) e.stopPropagation();
+      audioEnabled = !audioEnabled;
       if (audioEnabled) {
         initAudio();
         if (audioCtx && audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
-        if (muteBtn) muteBtn.classList.add('is-active');
-        if (muteText) muteText.innerText = "Silenciar";
-        if (muteIcon) {
-          muteIcon.innerHTML = `
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          `;
-        }
       } else {
         stopPercussionRhythm();
-        if (muteBtn) muteBtn.classList.remove('is-active');
-        if (muteText) muteText.innerText = "Activar Sonido";
-        if (muteIcon) {
-          muteIcon.innerHTML = `
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <line x1="23" y1="9" x2="17" y2="15"></line>
-            <line x1="17" y1="9" x2="23" y2="15"></line>
-          `;
-        }
+      }
+      updateMuteButtonUI();
+    }
+
+    function showReplayOverlay() {
+      const overlay = document.getElementById('promoReplayOverlay');
+      if (overlay) {
+        overlay.classList.add('active');
       }
     }
 
-    // Auto-reproducción continua en bucle (loop)
-    function startAutoplay() {
+    function replayPromo(e) {
+      if (e) e.stopPropagation();
+      const overlay = document.getElementById('promoReplayOverlay');
+      if (overlay) {
+        overlay.classList.remove('active');
+      }
+      clearTimeout(timer);
+      if (outroTextTimer) clearTimeout(outroTextTimer);
+      if (outroLogoTimer) clearTimeout(outroLogoTimer);
+      stopPercussionRhythm();
+      step = 0;
       isPlaying = true;
-      audioEnabled = false;
+      audioEnabled = true;
+      initAudio();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      updateMuteButtonUI();
+      nextFrame();
+    }
+
+    // Desbloquear audio en la primera interacción del usuario con la página
+    function unlockAudioOnGesture() {
+      if (audioEnabled) {
+        initAudio();
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+    }
+    window.addEventListener('click', unlockAudioOnGesture, { passive: true });
+    window.addEventListener('touchstart', unlockAudioOnGesture, { passive: true });
+
+    // Iniciar reproducción una vez (con sonido predeterminado)
+    function startInitialPlay() {
+      isPlaying = true;
+      audioEnabled = true;
+      updateMuteButtonUI();
       if (!timer) {
         nextFrame();
       }
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', startAutoplay);
+      document.addEventListener('DOMContentLoaded', startInitialPlay);
     } else {
-      startAutoplay();
+      startInitialPlay();
     }
 
-    // Tocar el video activa/desactiva el sonido
+    // Al hacer clic en el video durante la reproducción, activar/silenciar sonido
     const stageEl = document.getElementById('promoStage');
     if (stageEl) {
       stageEl.addEventListener('click', (e) => {
-        if (e.target.closest('#promoMuteBtn')) return;
+        if (e.target.closest('#promoMuteBtn') || e.target.closest('#promoReplayOverlay')) return;
         toggleAudio(e);
       });
     }
