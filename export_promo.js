@@ -528,7 +528,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
   });
 
   console.log(`[Recording] Starting screencast session at ${width}x${height}...`);
-  await client.send('Page.startScreencast', { format: 'jpeg', quality: 92, everyNthFrame: 1 });
+  await client.send('Page.startScreencast', { format: 'jpeg', quality: 100, everyNthFrame: 1 });
   
   // Trigger playback
   await page.evaluate(() => {
@@ -578,9 +578,9 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
   }
   fs.writeFileSync(concatPath, concatContent);
 
-  // Encode with FFmpeg
+  // Encode with FFmpeg (Master Quality Profile)
   const targetOutput = path.join(PROJECT_DIR, outputFilename);
-  console.log(`[FFmpeg] Encoding frame-perfect MP4 -> ${targetOutput}...`);
+  console.log(`[FFmpeg] Encoding MASTER-QUALITY MP4 -> ${targetOutput}...`);
   
   const ffmpegCmd = [
     'ffmpeg', '-y',
@@ -589,13 +589,16 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
     '-i', `"${concatPath}"`,
     '-i', `"${audioPath}"`,
     '-c:v', 'libx264',
-    '-preset', 'medium',
-    '-crf', '18',
+    '-preset', 'slow',
+    '-crf', '12',
+    '-b:v', '14M',
+    '-maxrate', '20M',
+    '-bufsize', '28M',
     '-pix_fmt', 'yuv420p',
     '-r', '60',
     '-fps_mode', 'cfr',
     '-c:a', 'aac',
-    '-b:a', '256k',
+    '-b:a', '320k',
     '-ar', '48000',
     '-shortest',
     '-movflags', '+faststart',
