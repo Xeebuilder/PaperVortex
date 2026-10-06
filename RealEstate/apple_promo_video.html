@@ -181,10 +181,38 @@
     }
 
     .logo-img {
-      height: clamp(90px, 16vw, 170px);
+      height: clamp(150px, 22vw, 250px);
       width: auto;
       object-fit: contain;
-      filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.45));
+      filter: drop-shadow(0 0 50px rgba(255, 255, 255, 0.45));
+    }
+
+    /* Mobile Responsive Typography & Layout */
+    @media (max-width: 768px), (max-aspect-ratio: 1/1) {
+      .text-box {
+        font-size: clamp(52px, 8.4vw, 94px);
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        word-spacing: 0.10em;
+        padding: 0 20px;
+        max-width: 96vw;
+      }
+      .brand-tag {
+        top: 36px;
+        left: 30px;
+        font-size: 16px;
+      }
+      .brand-tag img {
+        height: 28px;
+      }
+      .wa-bubble-wrap {
+        font-size: clamp(26px, 4.8vw, 42px);
+        padding: 20px 28px;
+        max-width: 90vw;
+      }
+      .logo-img {
+        height: clamp(190px, 34vw, 270px);
+      }
     }
 
     /* Top Progress Bar - REMOVED */
@@ -345,7 +373,7 @@
 
       // Outro
       { text: "PRUÉBALO <span class='highlight-green'>1 SEMANA 100% GRATIS.</span>", dur: 1200, type: "solution" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 2600, type: "outro_logo" }
+      { text: "PAPER VORTEX STUDIOS.", dur: 4200, type: "outro_logo" }
     ];
 
     const storyEN = [
@@ -379,7 +407,7 @@
 
       // Outro
       { text: "TEST IT <span class='highlight-green'>1 WEEK 100% FREE.</span>", dur: 1200, type: "solution" },
-      { text: "PAPER VORTEX STUDIOS.", dur: 2600, type: "outro_logo" }
+      { text: "PAPER VORTEX STUDIOS.", dur: 4200, type: "outro_logo" }
     ];
 
     let currentStory = storyES;
@@ -719,14 +747,38 @@
               const textBox = document.getElementById('textBox');
               const logoOutro = document.getElementById('logoOutro');
               const progressBar = document.getElementById('progressBar');
+              
               textBox.classList.remove('beat-impact');
+              textBox.style.opacity = '1';
+              textBox.style.transition = '';
               textBox.innerHTML = frame.text;
               textBox.classList.add('active');
+              textBox.style.fontSize = 'clamp(32px, 5.5vw, 64px)';
+
               logoOutro.style.display = 'block';
-              textBox.style.fontSize = 'clamp(24px, 4.5vw, 52px)';
-              progressBar.style.width = '100%';
+              logoOutro.style.opacity = '1';
+              logoOutro.style.transition = '';
+
+              if (progressBar) progressBar.style.width = '100%';
               play808(1.4);
-              playOutroPad();
+              playOutroPad(3.8);
+
+              // 1. A los 1.8s, las letras ("PAPER VORTEX STUDIOS.") se desvanecen
+              setTimeout(() => {
+                if (isPlaying) {
+                  textBox.style.transition = 'opacity 0.6s ease-out';
+                  textBox.style.opacity = '0';
+                }
+              }, 1800);
+
+              // 2. A los 3.2s (el vortex queda ~1s solo en pantalla), el vortex se desvanece
+              setTimeout(() => {
+                if (isPlaying) {
+                  logoOutro.style.transition = 'opacity 0.8s ease-out';
+                  logoOutro.style.opacity = '0';
+                }
+              }, 3200);
+
               timer = setTimeout(() => {
                 if (isPlaying) {
                   step = 0;
@@ -785,9 +837,9 @@
     }
 
     // Grand Finale Pad
-    function playOutroPad() {
+    function playOutroPad(duration = 3.8) {
       if (!audioEnabled || !audioCtx) return;
-      playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], 2.2);
+      playSynthChord([174.61, 207.65, 261.63, 311.13, 392.0], duration);
     }
 
     const chordFm = [174.61, 207.65, 261.63];
@@ -816,6 +868,9 @@
 
       // Reset states
       textBox.classList.remove('active', 'cover-screen', 'beat-impact');
+      textBox.style.fontSize = '';
+      textBox.style.opacity = '1';
+      textBox.style.transition = '';
       waBubble.style.display = 'none';
       logoOutro.style.display = 'none';
 

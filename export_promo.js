@@ -256,9 +256,9 @@ async function renderAudioFromEvents(browser, events, totalDuration, outputPath)
       osc.stop(t + 1.26);
     }
     
-    function playOutroPad(t) {
+    function playOutroPad(t, duration = 3.8) {
       if (t < 0) t = 0;
-      playSynthChord(t, [174.61, 207.65, 261.63, 311.13, 392.0], 2.2);
+      playSynthChord(t, [174.61, 207.65, 261.63, 311.13, 392.0], duration);
     }
     
     // Schedule all captured events
@@ -293,7 +293,7 @@ async function renderAudioFromEvents(browser, events, totalDuration, outputPath)
           playWhooshRiser(t);
           break;
         case 'outroPad':
-          playOutroPad(t);
+          playOutroPad(t, evt.dur || 3.8);
           break;
       }
     }
@@ -377,23 +377,18 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
     const controls = document.querySelector('.controls');
     if (controls) controls.style.display = 'none';
 
-    // Optimize typography and spacing for vertical mode if needed
+    // Optimize layout and spacing for vertical mode
     if (isVertical) {
       const brandTag = document.querySelector('.brand-tag');
       if (brandTag) {
         brandTag.style.top = '60px';
         brandTag.style.left = '40px';
-        brandTag.style.fontSize = '18px';
-      }
-      const textBox = document.getElementById('textBox');
-      if (textBox) {
-        textBox.style.fontSize = 'clamp(44px, 8vw, 84px)';
-        textBox.style.padding = '0 20px';
+        brandTag.style.fontSize = '20px';
       }
       const waBubble = document.getElementById('waBubble');
       if (waBubble) {
-        waBubble.style.fontSize = '26px';
-        waBubble.style.maxWidth = '92%';
+        waBubble.style.fontSize = '32px';
+        waBubble.style.maxWidth = '90%';
       }
     }
 
@@ -474,8 +469,8 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
       recordEvt('whoosh');
     };
 
-    window.playOutroPad = function() {
-      recordEvt('outroPad');
+    window.playOutroPad = function(duration = 3.8) {
+      recordEvt('outroPad', { dur: duration });
     };
 
     // Intercept nextFrame: start timer once Slide 0 actually paints
@@ -535,7 +530,7 @@ async function exportVideo({ width, height, outputFilename, isVertical = false }
     togglePlay();
   });
 
-  const expectedDurationSec = 29.5;
+  const expectedDurationSec = 31.2;
   const startWallClock = Date.now();
   
   while ((Date.now() - startWallClock) / 1000 < expectedDurationSec) {
